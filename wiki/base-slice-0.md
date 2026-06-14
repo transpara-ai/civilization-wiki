@@ -3,7 +3,7 @@ entity: Base Slice 0 (Control-Plane Proof)
 aliases: [base-slice-0, base slice 0, the control-plane proof, v3.9 base slice 0]
 tier: arc
 status: compiled
-last_compiled: 2026-06-13
+last_compiled: 2026-06-14
 sources:
   - raw/transpara/dark-factory/Dark Factory - Motive, Goal, Approach.md  # "Base Slice 0 Flow", L232-253; orientation
   - raw/transpara/dark-factory/v3.9/README.md  # "Current First Implementation Target", L87-108; Base Rule, L66-85
@@ -103,6 +103,24 @@ Base Slice 0 is the gate to everything downstream. Only after it passes do the d
 - **Higher autonomy** → multi-agent orchestration, advisory [[memory-knowledge-advisory]], and governed [[capability-evolution]] — and ultimately the v4.0 doctrine of the factory building the factory ([[dark-factory-v4]]).
 
 The asymmetry is deliberate: a stalled Base Slice 0 costs one recoverable unit of work; a Base Slice 0 waved through would let every higher, riskier layer run ungated. The arc pays the safe side.
+
+## Run-3 update (2026-06-14)
+
+**Round 6 result (v16) — "first society to finish", gate requirement not yet satisfied.**
+
+Round 6 (`codex/fo-roles-catalog-v16`, HEAD `002bcf8`) closed 2026-06-12 as `finished-unsignalled`: the society ran 45 minutes unattended, sealed a 1128-event chain, and produced a 9-role v2.0.0 catalog deliverable. The arc recorded this as the first time the society reached terminal quiescence with a pushed artifact branch — milestone language: "first society to finish."
+
+However, the gate requirement (zero-blocker delivery) is **not yet satisfied.** Finding F1 (`v16-F1`): all six reviews conducted during round 6 were premised on the wrong repo cwd — the reviewer (eventgraph `claude_cli.go` Operate path) verified in the daemon's working directory all round instead of the target workspace, so none of the six reviews count as the FO's zero-blocker gate in the FO's sense. The deliverable branch is pushed and the catalog is now canonical (`status: active` as of 2026-06-14), but the v16-F1 defect means the FO's review-gate was not cleared by round 6 itself.
+
+Additional findings from v16: F2 — planner decomposition silently narrowed FO scope, causing a 24→9 role ping-pong across 6 completions; F3 — terminal quiescence has no exit/signal/run-completion, and escalations demand "Human/CTO judgment" with no channel to receive one.
+
+**Gate-E decision pending.** After round 6, the arc reached its hard stop: Gate-E (or a new grant) is live and awaits Michael's review as of 2026-06-14. The v16 daemon (PID 821925/821927) is alive and frozen by design pending that decision.
+
+The v16 fix-set scope (candidate): F1 WorkDir threading (`hive pkg/loop` + eventgraph provider), F2 spec-diff gate at subtask creation, F3 quiescence detector → `hive.run.completed` + human-decision channel.
+
+**Relationship to Base Slice 0.** The Reunification Slice-1 run history (rounds 1–6, grant-1 and grant-2) confirms that FactoryOrder wiring, EventGraph truth-substrate, and the GateResult/TraceCompletenessGate machinery are exercised in production. The fail-legible note below (do not conflate Slice-1 with architectural Base Slice 0) remains in force: round-6 completion is evidence that the vocabulary and infrastructure are live, not a proof that the minimal control-plane Base Slice 0 (no LLM, no external runtime, no SaaS generation) has run green end-to-end in its spec-defined form.
+
+**Sources for this update:** `raw/transpara/dark-factory/reunification/2026-06-12-arc-state.md` (DF-REUNIFY-2026-06-12-ARC-STATE, v0.3.0).
 
 ## Sources & provenance
 

@@ -7,7 +7,7 @@ aliases:
   - transpara-ai/OB1
 tier: investigation
 status: compiled
-last_compiled: 2026-06-13
+last_compiled: 2026-06-14
 sources:
   - /Transpara/transpara-ai/data/repos/OB1/README.md  # upstream README mirrored in the fork: "infrastructure layer for your thinking"; one database / one AI gateway / one chat channel; FSL-1.1-MIT; maintainers
   - /Transpara/transpara-ai/data/repos/OB1/CLAUDE.md  # what the repo is: Supabase + pgvector, one MCP protocol, any AI client; guard rails
@@ -135,3 +135,15 @@ Transpara investigation and decision (the actual subject):
 Operational corroboration from **Open Brain** (the running store): the transaction-log (eventgraph) vs. reasoning-log (Open Brain) reboot-survival design decision (2026-04), establishing OB1's pattern as memory-of-intent separate from truth; and the 2026-06-13 upstream-merge (`0c442a2`) + `open-brain-mcp` Edge Function redeploy / smoke-test op-notes on Supabase project `njofekbuaauffxqsfikl`.
 
 **Conflicts stated, not resolved.** (1) *Label vs. substance*: the doctrine classifies OB1 as a "cognitive planning pattern" while every description of the artifact (README, CLAUDE.md, PageIndex note) calls it a memory/recall substrate — and Decision 12 separately reserves "recall substrate only" for MemPalace; the gap is unexplained in sources and is flagged, not papered over. (2) *Identity binding*: the crosswalk/Decision rows name only "OpenBrain"; the OB1 / Nate B. Jones binding comes from the landscape article and the PageIndex note. (3) *Fork date*: 2026-04-08 is from the compile request, only indirectly corroborated. (4) *Crosswalk status*: the per-item crosswalk detail is `status: review` / `canonical: false`; the ratified part is the one-line Decision 12 / Decision 15 routing rule. `[[wikilinks]]` are forward references; some targets (e.g. `[[hive-governance]]`) may not be compiled yet.
+
+## Run-3 update (2026-06-14)
+
+**OB1 PR #5 — "make capture_thought verifiable and embedding-failure safe"** (merged 2026-06-14, commit `1d1d6e2`).
+
+This PR moves the read-back verification burden from the client to the server. Before this change, the server returned a success-shaped response string ("Captured as observation…") even when the underlying Supabase write failed silently — for example, on a quota 402 or a swallowed error. The client-side CLAUDE.md write cycle (mark → write → verify via `list_thoughts` → report on the verification, not the write) was the interim mitigation, but it was a client-side patch for a server-side durability gap.
+
+After PR #5, the server itself ensures durability before returning success: it does not emit a success response unless the write is confirmed, and embedding failures are handled safely rather than swallowed. This resolves the documented "confabulation trap" — the known failure mode where an agent reports "captured" on the strength of a success string that was the service's claim, not proof of a durable write.
+
+**What changes for clients:** the `capture_thought` tool's success response is now trustworthy as a write confirmation. The read-back step in the CLAUDE.md write cycle remains a recommended end-to-end safety net (it catches transmission and routing failures that live outside the server's control), but it is no longer compensating for a known server-side gap.
+
+**Source:** `transpara-ai/OB1` PR #5, commit `1d1d6e2`; `OB1/CLAUDE.md` write-cycle documentation (the "Capture is confirmed only by read-back" section, which now documents defense-in-depth rather than mitigation of a known defect).

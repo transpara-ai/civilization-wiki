@@ -3,7 +3,7 @@ entity: The Reunification Workstream
 aliases: [reunification, df-reunification, the reunification slice, one civilization one business]
 tier: arc
 status: compiled
-last_compiled: 2026-06-13
+last_compiled: 2026-06-14
 sources:
   - raw/transpara/dark-factory/reunification/README.md  # DF-REUNIFY-README v0.6.0, status review, authority: planning
   - raw/transpara/dark-factory/reunification/2026-06-05-slice-1-first-reunified-order-design.md  # DF-REUNIFY-2026-06-05-SLICE-1-DESIGN v0.1.2
@@ -141,3 +141,60 @@ Compiled from the two `reunification/` workstream artifacts in `transpara-ai/doc
 - `raw/transpara/dark-factory/reunification/2026-06-05-slice-1-first-reunified-order-design.md` — DF-REUNIFY-2026-06-05-SLICE-1-DESIGN v0.1.2.
 
 Chronology and the "did it run" reconciliation come from **Open Brain** captures (2026-06-05 reunification checkpoint and slice-1 build/live-run records; through 2026-06-12 for the roles-catalog supersession). This entity is internal to the dark-factory corpus; it has no Searles post and therefore no external durable URL. The drift-diagnosis vocabulary counts and the reproducing `grep` are reported from those sources, not independently re-run this session. `[[wikilinks]]` are forward references; several targets ([[mission]], [[authority-layer]], [[fourteen-layers]]) are not yet compiled.
+
+## Run-3 update (2026-06-14)
+
+Sources: `dark-factory/reunification/2026-06-12-arc-state.md` (DF-REUNIFY-2026-06-12-ARC-STATE v0.3.0) and `2026-06-11-slice-1-take-4-round-log.md` (DF-REUNIFY-2026-06-11-SLICE-1-TAKE-4-ROUND-LOG v0.5.0).
+
+### Round 6 (v16) complete — first society to finish
+
+Round 6 closed on **2026-06-12** with a new close class: **`finished-unsignalled`**. The society finished all assignable work, sealed the chain at **1128 events**, and entered terminal quiescence at 12:13. It was the first society across the arc to finish rather than stall.
+
+The arc ladder in full:
+
+| Round | Store | Duration | Outcome |
+|---|---|---|---|
+| 3 | v13 | ~5 min | silent — API 529 killed the only CanOperate agent; loop exited without a chain event |
+| 4 | v14 | ~27 min | visible — all 8 keepalive agents budget-exited; loop obituaries printed; zero silent deaths |
+| 5 | v15 | ~31 min + artifact | productive — catalog committed (`b98b67a`), renewal deadlock stalled further progress |
+| **6** | **v16** | **45 min** | **finished-unsignalled — first society to finish; chain sealed; daemon alive + frozen** |
+
+### v15 fix set proven live
+
+The v15 fix set (hive#157, merged `2fe5b2f`) was the purpose of round 6 and was proven in production across every dimension:
+
+- **F1(a)** — 6/6 parks raised `agent.budget.exhausted` on-chain; zero raise failures.
+- **F1(b+c)** — the allocator woke, rechecked, and renewed all five parked agents; sufficiency math verbatim in production reason strings ("PARKED - renew above 31m22s elapsed"); zero cooldown stranding; plus one preemptive renewal and one adaptive re-up beyond the taught contract.
+- **F3** — six reviews in round 6 versus zero across five prior epochs; first review arrived at 16 minutes on the original 30-minute lifespan.
+- **F2 git law** — six stacked commits under maximal rework pressure, including direct adversarial instruction to violate workspace containment; zero amends, resets, or branch-switches.
+
+### v16 open findings
+
+Three findings were unmasked by the fix set (none caused by it):
+
+- **F1 — WorkDir/Reason cwd defect (eventgraph `claude_cli.go`).** The Operate path correctly sets `cmd.Dir = task.WorkDir` (fail-closed gate); the Reason path sets no `cmd.Dir`. Every agent's claude-cli shell inherits the daemon's launch directory. The daemon was launched from `repos/hive`; all six round-6 reviews "verified" the deliverable in the wrong repo — phantom absence in rounds 1–3, then wrong-destination doctrine in rounds 4–6. Fix shape: thread WorkDir into Reason task construction; honor it in the provider mirroring Operate's gate; enforce that the daemon's cwd is always the same git repo as the workspace.
+- **F2 — dual-spec oscillation.** The planner's decomposition silently narrowed the FO's scope at planning time (subtask `019ebb62`, seq 124, pre-review), scoping to code-derived roles only and dropping the governance layer. Two live contradictory specs — the subtask reading and the FO's 24-role dual-layer requirement — produced six completions in perfect alternation (`24→9→24→9→24→9 roles`), each locally correct against one spec. Fix shape: a spec-diff gate at subtask creation requiring an explicit narrowing declaration against the parent FO; review-rejection content never becomes task spec without FO reconciliation.
+- **F3 — no quiescence exit.** Keepalive wake-blocking plus the recheck allowlist's work-exists gates mean a society whose work-generators exit and whose reviews cap out freezes indefinitely. `hive.run.completed` never fired; only the sentinel's chain-frozen watch surfaced the close. **v16 is the first society to finish, and the system has no concept for finishing.** Fix shape: a quiescence detector that emits `hive.run.completed` (or escalates to the operator) when all loops are wake-blocked and no assignable/reviewable/renewable work remains. Related: the cap's escalation comments demanded "Human/CTO judgment" with no channel in the system to receive a human decision.
+
+### Power loss event and crash recovery
+
+At ~18:44–18:49 on 2026-06-11, nucbuntu lost power during round 4 (v14), capturing all nine agents mid-flight (`last -x` shows a reboot at 18:49 with no prior shutdown record). This was the **first live proof of the crash-recovery path**:
+
+- All event chains v4–v14 survived on the postgres volume (postgres needed a manual `docker start` — it has no restart policy).
+- `/tmp` was wiped: uncommitted round logs, arc-state docs, sentinel scripts, and forensic dumps from rounds 1–3 were lost.
+- Round 4 resumed at 19:15 on the same store and repo, no re-seed. `checkpoint.RecoverAll` cold-started nine fresh identities (role-name continuity); within ~2 minutes the new implementer was auto-assigned the same child task ID the pre-crash epoch had been working.
+- Chain integrity held: seq 462–484 do not exist (postgres WAL recovery sequence skip — cosmetic; hash chaining is per-event).
+
+Lesson applied structurally: operational state moved from `/tmp` to `/Transpara/transpara-ai/data/df-slice1/` (data disk, reboot-safe). Round records now commit to the docs repo as they are written, not at closeout.
+
+### sentinel-v16.sh — session-bound-watcher class closed
+
+The v15 meta-finding (the sentinel dying at session boundaries had caused two unobserved round closes) was resolved by making the sentinel a nohup process before any round-6 boot. `sentinel-v16.sh` ran round 6 entirely unattended: the operator session crashed at ~11:29, right after the launch report, and the nohup pair ran the round through, banking every WAKE (parks, renewals, milestones, the chain-freeze) and surfacing the close at 12:32 (chain-frozen, two intervals). **The session-bound-watcher failure class is closed.**
+
+### Grant accounting and Gate-E
+
+Grant-2 (rounds 4–6) is **exhausted**. The hard stop is reached. Gate-E — continue with the v16 fix-set scope or stop — is Michael's decision. The v16 fix-set candidate: F1 WorkDir threading (hive `pkg/loop` + eventgraph provider), F2 spec-diff gate at subtask creation, F3 quiescence detector emitting `hive.run.completed` plus a human-decision channel. The v16 daemon (PID 821925/821927, ~0% CPU) is alive and frozen by design pending the Gate-E decision.
+
+### Deliverable state
+
+Catalog branch `codex/fo-roles-catalog-v16` pushed to the transpara-ai fork (HEAD `002bcf8`, 9-role v2.0.0 subtask reading; the FO's 24-role reading in-history at `b638a44`). All six round-6 reviews were premised on the wrong repo (v16-F1), so in the FO's sense the catalog **remains unreviewed**. Human ruling recorded: the workspace is `transpara-ai/docs`; the FO's 24-role dual-layer scope governs (`b638a44`'s content); the planner subtask was mis-scoped.

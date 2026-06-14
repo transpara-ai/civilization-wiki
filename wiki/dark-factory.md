@@ -9,7 +9,7 @@ aliases:
   - DF
 tier: arc
 status: compiled
-last_compiled: 2026-06-13
+last_compiled: 2026-06-14
 sources:
   - raw/transpara/dark-factory/Dark Factory - Motive, Goal, Approach.md  # DF-MOTIVE-GOAL-APPROACH v0.1.5, status draft, updated 2026-06-12 — first-read orientation: motive, goal, approach, flows, responsibility map, decision register, citation handles
   - raw/transpara/dark-factory/README.md  # folder index: start-here pointer, current revision (v3.9 accepted 2026-06-05), archived baselines v3.2–v3.8, v3.0, v3.1, v2, phase record, reorganization + reunification workstreams
@@ -209,3 +209,47 @@ Compiled from the Dark Factory source corpus in `raw/transpara/dark-factory/`:
 **Durable external URLs** (carried from the orientation doc's Citation Handles table, used as motive/research input only): the Matt Searles Substack corpus — [Searles-P1] *20 Primitives and a Late Night* (https://mattsearles2.substack.com/p/20-primitives-and-a-late-night); [Searles-Cult-Test] *The Cult Test* (https://mattsearles2.substack.com/p/the-cult-test); and the broader series referenced for the 44/200-primitive and thirteen-graphs framing.
 
 **Conflicts and limits stated, not resolved:** (1) **Hive's category** — "Selected governance layer" (responsibility map) vs "Selected native core" (register B) within the same orientation doc; stated, not reconciled. (2) **Repo namespace** — the Dark Factory docs use `transpara-ai/*`; the platform-wide CLAUDE.md uses `transpara` for product repos; used as the source writes it, with the discrepancy flagged. (3) **v4.0 status** — doctrine accepted (2026-06-12) but folder not canonical; carried with the explicit "authorizes nothing" qualifier. (4) **v3.1–v3.8 intermediate baselines** — named in the folder index and v3.9 `supersedes:` front matter but their individual READMEs were not read this run; labelled thin. `[[wikilinks]]` are forward references; several targets ([[hive0]], [[thirteen-graphs]], [[primitive-basis]]) may not yet be compiled.
+
+## Run-3 update (2026-06-14)
+
+This section records material facts that became known between the Run-2 compile (2026-06-13) and 2026-06-14. It does not revise existing content — it appends forward.
+
+### G-1.2 complete: Round 6 (v16) closed "finished-unsignalled" on 2026-06-12
+
+Grant-1.2 (G-1.2) is complete. Round 6, running as v16, closed on 2026-06-12 with a new close class: **`finished-unsignalled`**. The run launched at 11:28, produced the first review of the entire arc at 11:44, self-managed a v15-deadlock replay at 12:00, and reached terminal quiescence at 12:13. The chain sealed at 1,128 events. The society ran unattended through an operator-session crash — a nohup sentinel pair held the round throughout. Dark Factory's society is **the first to finish** a Slice 1 arc run of this kind.
+
+The arc ladder, in order: v13 silent 5 min → v14 visible 27 min → v15 productive 31 min + verified artifact → **v16 finished 45 min, fix set proven live**. Budget across the entire arc: $0.00 metered (claude-cli subscription).
+
+The catalog deliverable (`codex/fo-roles-catalog-v16`, HEAD `002bcf8`, 9-role v2.0.0 with subtask reading) is pushed to `transpara-ai`. Six oscillation commits are preserved in history; the FO's 24-role reading survives at `b638a44`. The deliverable remains **unreviewed in the FO's sense** — all six reviews in v16 were premised on the wrong repo (v16-F1, below).
+
+**Grant-2 is exhausted** (rounds 4–6 consumed). The hard stop has been reached. The live decision pending is **Gate-E or new-grant**; the v16 daemon (PID 821925/821927) is alive and frozen by design at ~0% CPU pending disposition with the Gate-E decision.
+
+### v16 open findings
+
+Three findings emerged from Round 6 and remain open:
+
+- **F1 — WorkDir/Reason cwd defect.** In `eventgraph claude_cli.go`: the Operate phase fails closed on `WorkDir`, but the Reason phase sets no `cmd.Dir`, so the reviewer verified files in the daemon's working directory for the entire round rather than the task workspace. Candidate fix: thread `WorkDir` through `pkg/loop` in `hive` and the eventgraph provider.
+- **F2 — Dual-spec oscillation.** The planner decomposition silently narrowed the FactoryOrder scope, causing a dual-spec oscillation: 6 completions across 24→9 role ping-pong. Candidate fix: a spec-diff gate at subtask creation that detects when a child task's spec diverges from the parent FactoryOrder.
+- **F3 — Quiescence has no exit.** Terminal quiescence has no exit signal, no run-completion event, and no escalation channel. Escalations during v16 demanded "Human/CTO judgment" with no channel to receive one. Candidate fix: a quiescence detector emitting `hive.run.completed` plus a human-decision channel.
+
+The v16 fix-set scope (F1 WorkDir threading, F2 spec-diff gate, F3 quiescence detector) has been identified and has a GO gate from the human operator. Implementation is unauthorized until Gate-E or a new-grant decision authorizes it.
+
+A society escalation during v16 also produced an evidence-backed ruling: the catalog workspace IS `transpara-ai/docs`; the FO's 24-role scope governs (`b638a44`); the subtask was mis-scoped.
+
+### v4.0 doctrine accepted on 2026-06-12
+
+The v4.0 seed ADR — `01-development-process-as-governed-civilization-function-v4.0.md` (DF-V4.0-ADR-001) — was **accepted** by Michael Saucier (human External Committee) on 2026-06-12. The accepting instruction, given in a Claude Code operator session: "Proceed to accept the v4 doctrine and manifesto. Apply to all known behavior, then make any modifications required."
+
+All five ADR acceptance criteria are confirmed satisfied: External Committee acceptance, reconciliation plan accepted, Tier-0 structural guards adopted or deferred with reasons, checkpoint recorded, and affirmation that acceptance alone advances no gate and closes no risk.
+
+Tier-0 structural guards disposition at acceptance: guard 2b (`npm run verify` as PR check) and 2c (CODEOWNERS on governance-sensitive paths) were **adopted** via the acceptance PR to `transpara-ai/docs`. Guards 3 (injection-quarantine on feedback channel) and 4 (never trust self-reported validation) were **adopted** as standing interim-loop rules by the checkpoint. Guards 1 (meta-loop confidentiality/data-handling policy) and 2a (branch protection on `main`) were **deferred** with reasons recorded.
+
+**What this acceptance does not do** (unchanged from the checkpoint): v3.9 remains the operative baseline; the v4.0 folder is still a candidate (criterion 2 — coverage matrix — remains open, reconciliation unauthorized); Gates F–J remain waiting; Gates K and L remain unsatisfied; residual risks R-001/R-002/R-003 remain unresolved; no autonomy level above the current bootstrap is granted. The v4.0 folder "is documentation doctrine" — it authorizes no implementation.
+
+A manifesto finding was recorded in the acceptance checkpoint: no v4 manifesto artifact exists. Acceptance of a non-existent artifact was refused under the fail-closed rule. Open item for the External Committee: identify, commission, or drop.
+
+### Observatory shipped: /ops/observatory live on site (2026-06-13/14)
+
+The transparency surface defined in the Civilization Transparency Contract (DF-TRANSPARENCY-CONTRACT v0.1.0, `status: draft`, created 2026-06-13) has been partially implemented. The `/ops/observatory` page is **live on `transpara-ai/site`** as of 2026-06-13/14, delivered via PRs #76 and #77.
+
+The transparency contract defines seven terms (T1–T7) that a human overseer must be able to see for the civilization to count as transparently self-governing. As of the contract's own satisfaction map (2026-06-13), the observatory covers the data and API layers for T1–T5 but all five remain **not yet visualized** — the component (`site-observatory-phase3-plan.md`) is the gap. T6 (posture never overstated) is static plan only; T7 (read-only by construction) is enforced by the Phase-3 surface design. The contract is advisory/draft; EventGraph remains truth.

@@ -3,7 +3,7 @@ entity: Site (Operator Console)
 aliases: [site, the operator console, the governed console, the Site console, Gate-E surface, the society view]
 tier: architecture
 status: compiled
-last_compiled: 2026-06-13
+last_compiled: 2026-06-14
 sources:
   - raw/transpara/dark-factory/Dark Factory - Motive, Goal, Approach.md  # §"Use Work for Flow", responsibility map, decision register B (Site = Selected operator console)
   - raw/transpara/dark-factory/reunification/2026-06-05-slice-1-first-reunified-order-design.md  # §3 membrane, §5 what you see, repo impact map, success criteria (Site = Gate-E + society-view, effect=none)
@@ -93,6 +93,32 @@ The Motive/Goal/Approach doc's one-sentence architecture places Site precisely: 
 - [[the-deployment-arc]] — Phases 4 (interaction), 5 (observability), 6 (live graphics) are Site's roadmap.
 - [[gates]] — Gate E is the decision surface Site renders.
 
+## Run-3 update (2026-06-14)
+
+Two PRs shipped on 2026-06-13 that together deliver the observatory — the first real instance of the Gate-E "society view" transparency surface described in the deployment arc and the transparency contract (DF-TRANSPARENCY-CONTRACT v0.1.0).
+
+**site#76 — civilization observatory, slice 1 (`/ops/observatory`).** A new route `GET /ops/observatory` adds a read-only transparency surface satisfying the Civilization Transparency Contract terms T1–T7 (authority decisions, agent lifecycle, spend-vs-cap, causal traces, chain integrity, posture legibility, read-only construction). Implementation details of note:
+
+- **`graph/svgviz`**: new pure-stdlib server-rendered SVG package (gauge, bars, span-strip, causal staircase). Every renderer fails **closed** on undrawable input — unknown cap, negative/NaN values, empty series — and emits an explicit unavailable block rather than a misleading visual. Unknown agent state kinds render the explicit `viz-unknown` CSS class (allowlisted, not fallback styling). All feeder-supplied labels are HTML-escaped.
+- **Presence-aware decode**: every feeder scalar in vitals and agent snapshots is a pointer; an omitted JSON field renders as `not reported` / `—` / `unknown`, never as `0` / `false` facts. The transparency contract's own words apply: **"Fail-open is the enemy here: an omitted JSON field must never render as a fact."**
+- **Read-only by construction**: GET handlers only; consumes `work /telemetry/status`, `/telemetry/agents/history?window=24h`, `/telemetry/sse` (SSE not consumed in slice 1 — see site#77), and the hive operator projection. No new write paths; `effect=none` invariant preserved throughout. Zero new third-party dependencies.
+- **Allowlisted decision outcomes**: authority-decision outcome chips validate against the canonical DF-SPEC-0004 vocabulary (`Autonomous` / `Notify` / `ApprovalRequired` / `Forbidden`); non-canonical values render explicitly as non-canonical, not silently mapped or suppressed.
+- **Bounded work-API fetches**: all work-API fetches in the `graph` package now use a bounded 5-second client (`obsWorkClient`); a hung feeder renders unavailable panels instead of hanging `/ops` pages.
+- **Task ID allowlist**: task IDs are allowlist-validated (`^[A-Za-z0-9_.:-]{1,128}$`) before any outbound request is built; the feeder's task-id echo is verified against the requested ID (an empty echo is treated as unverifiable and the trail is withheld — fail-closed, not fail-open).
+
+**site#77 — live pulse and civilization assembly.** Extends the observatory with two additions: (1) a **live event pulse** wired to the work-server SSE stream (`/telemetry/sse`), making the observatory a streaming consumer for the first time in first-party Site; and (2) a **civilization assembly panel** exposing the full agent-role roster as assembled by the hive, with model-mode inference and projection provenance. This is the first time first-party Site opens an `EventSource` connection — the gap noted in the 2026-06-09 as-built review ("no first-party Site EventSource/WebSocket") is now closed for the observatory surface.
+
+**Status correction (as of 2026-06-14).** The "What is and isn't built" table below should be read with the following updates applied: the observatory (`/ops/observatory`) is now **merged and live** (not `not merged` as of the 2026-06-12 snapshot); first-party Site **does** now consume SSE (in the observatory surface only); the live pulse and civilization assembly panels are included. The `site#76`/`site#77` entry in the table replaces the earlier "not merged" note.
+
+| Surface | Status (2026-06-14) |
+|---|---|
+| Gate-E decision surface | Yes — `site#62`, `effect=none`; real request + governance POST forward (`site#73`) |
+| Model-policy projection + controls | Yes — `site#74`/`#75` |
+| Proof-of-work / audit views | Yes — `/ops/evidence` |
+| Society view (role timeline) | Yes, static render (`site#73`) |
+| Observatory (`/ops/observatory`) | **Yes, merged** — `site#76`/`#77`; read-only; SSE pulse; civilization assembly |
+| Full live/animated visualization | No — Phase 6 work outstanding |
+
 ## Sources & provenance
 
 Compiled this run from:
@@ -101,5 +127,9 @@ Compiled this run from:
 - **`reunification/2026-06-05-slice-1-first-reunified-order-design.md`** (DF-REUNIFY-2026-06-05-SLICE-1-DESIGN, v0.1.2) — inversion #5; §3 (the authority gate, `effect=none`, Site forwards a governed decision and "stays a pure console"; Hive assembles evidence, Work mutates); §5 (the role-timeline "society building the order" view); the repo impact map and success criteria.
 - **`reunification/2026-06-09-deployment-arc.md`** (DF-REUNIFY-2026-06-09-DEPLOYMENT-ARC, v0.1.4) — the `site` as-built row (Gate-E `effect=none`; static society view; the verbatim "no first-party Site … EventSource/WebSocket … live visualization" finding), the pillar scorecard, Phase 4 and Phase 6, and the "Site drifts toward executor" risk + the `effect=none` forbidden-pattern.
 - **Open Brain captures** (transpara-ai/site, 2026-05-31 .. 2026-06-12), used for PR/commit-level provenance and as-built status that the docs summarize but do not enumerate: the `site#62` Gate-E review (GET-only, hardcoded `effect=none`, absence-assertion tests; 2026-05-31); the Slice-1 seam validation and the approve/deny constant-drift bug + allowlist narrowing (commit `2289ffd`, 2026-06-05); the 2026-06-09 spectator-UI assessment (no SSE in first-party Site; `HIVE_OPS_API_BASE_URL` unset → empty society view; stale loop snapshot; "the UI is ahead of the runtime"); and the `site#76` civilization-observatory SVG slice (2026-06-12, not merged). Open Brain claims about deployment liveness and the runtime-is-the-blocker conclusion are labeled thin/negative in the body because they are operator assessments, not accepted doctrine.
+
+- **`site#76` commit `0dd73b5` (2026-06-13, merged)** — civilization observatory implementation in `graph/observatory.go`, `graph/svgviz/svgviz.go`, `graph/svgviz/svgviz_test.go`; GET-only `/ops/observatory` route; transparency contract T1–T7; adversarial review rounds r1/r2 (closed fail-open findings including presence-aware decode, task-id echo verification, renderer refusal wording, bounded HTTP client).
+- **`site#77` commit `6554f71` (2026-06-13, merged)** — live event pulse (SSE consumer) and civilization assembly panel added to observatory (`graph/observatory.go`, `graph/observatory.templ`).
+- **`transparency-contract-v0.1.0.md`** (`transpara-ai/docs: dark-factory/implementation/visualization/`, DF-TRANSPARENCY-CONTRACT v0.1.0, 2026-06-13, `status: draft`, `canonical: false`) — the T1–T7 terms the observatory is built against; satisfaction map as of 2026-06-13; the "fail-open is the enemy" principle quoted in the Run-3 section. Local read path: `/Transpara/transpara-ai/data/repos/docs/dark-factory/implementation/visualization/transparency-contract-v0.1.0.md`.
 
 Durable Searles URLs are not cited here: this is an architecture/arc entity whose claims trace to the first-party dark-factory docs and to Open Brain, not to the Searles philosophy corpus. `[[wikilinks]]` are forward references; most target articles are not yet compiled.
