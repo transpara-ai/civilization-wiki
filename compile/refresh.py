@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""Deterministic nightly refresh for the Civilization Wiki.
+
+What it DOES (cheap, deterministic, safe to run unattended):
+  1. Mirror first-party dark-factory markdown into raw/transpara/ (makes provenance real + trackable).
+  2. Hash all raw/ sources, diff against the last snapshot -> which sources changed.
+  3. Map changed sources -> stale wiki articles (articles whose `sources:` cite a changed file).
+  4. Write compile/refresh-status.json (the fail-loud freshness signal the site shows).
+  5. Regenerate the served site (compile/build_site.py).
+
+What it does NOT do (by design — honors the standing rules):
+  * No LLM re-compile of article CONTENT (that is expensive + autonomous spend) -> manual, see REBUILD.md.
+  * No git commit, no push, no merge. It only updates local working files.
+  * Open Brain deltas are NOT auto-detected here (that needs an LLM/MCP run); flagged in the status note.
+"""
+import json
+import hashlib
+import subprocess
+import pathlib
+import datetime
+import re
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+RAW = ROOT / "raw"
+WIKI = ROOT / "wiki"
+DF = pathlib.Path("/Transpara/transpara-ai/data/repos/docs/dark-factory")
+SNAP = ROOT / "compile" / "source-snapshot.json"
+STATUS = ROOT / "compile" / "refresh-status.json"
+
+
+def sh(*a):
+    return subprocess.run(list(a), capture_output=True, text=True)
+
+
+def mirror_sources():
+    dst = RAW / "transpara" / "dark-factory"
+    dst.mkdir(parents=True, exist_ok=True)
+    if DF.exists():
+        sh("rsync", "-a", "--delete", "--prune-empty-dirs",
+           "--include=*/", "--include=*.md", "--exclude=*",
+           str(DF) + "/", str(dst) + "/")
+
+
+def hash_sources():
+    h = {}
+    for p in RAW.rglob("*.md"):
+        try:
+            h[str(p.relative_to(ROOT))] = hashlib.sha256(p.read_bytes()).hexdigest()
+        except Exception:
+            pass
+    return h
+
+
+def article_sources():
+    out = {}
+    for p in WIKI.glob("*.md"):
+        txt = p.read_text()
+        m = re.search(r"\nsources:\n(.*?)\n[A-Za-z_]+:", txt, re.S)
+        block = m.group(1) if m else ""
+        cites = [c.strip() for c in re.findall(r"(raw/[^\n#]+)", block)]
+        out[p.stem] = set(cites)
+    return out
+
+
+def main():
+    mirror_sources()
+    cur = hash_sources()
+    prev = {}
+    if SNAP.exists():
+        try:
+            prev = json.loads(SNAP.read_text())
+        except Exception:
+            prev = {}
+    changed = {k for k, v in cur.items() if prev.get(k) != v}
+    arts = article_sources()
+    stale = []
+    if prev:  # first run has no baseline -> nothing "stale" yet
+        for slug, cites in arts.items():
+            for c in cites:
+                if any(c in ch or ch in c for ch in changed):
+                    stale.append(slug)
+                    break
+    stale = sorted(set(stale))
+    status = {
+        "synced": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "article_count": len(list(WIKI.glob("*.md"))),
+        "sources_total": len(cur),
+        "sources_changed": (len(changed) if prev else 0),
+        "stale_articles": stale,
+        "note": "deterministic refresh; LLM re-compile is manual (see compile/REBUILD.md); Open Brain deltas not auto-detected",
+    }
+    STATUS.write_text(json.dumps(status, indent=2))
+    SNAP.write_text(json.dumps(cur, indent=2))
+    out = sh("python3", str(ROOT / "compile" / "build_site.py"))
+    print(out.stdout.strip() or out.stderr.strip())
+    print("refresh: %d articles, %d sources changed, %d stale" %
+          (status["article_count"], status["sources_changed"], len(stale)))
+
+
+if __name__ == "__main__":
+    main()
