@@ -10,6 +10,7 @@ Deterministic: Python stdlib + python-markdown only. No network, no LLM, no push
 import re
 import json
 import html
+import hashlib
 import pathlib
 import markdown
 
@@ -19,6 +20,7 @@ DIST = ROOT / "dist"
 ASSETS = ROOT / "compile" / "assets"
 STATUS = ROOT / "compile" / "refresh-status.json"
 INDEX = ROOT / "index.md"
+CSS_VER = ""
 
 TIER_ORDER = ["foundational", "architecture", "arc", "investigation", "concept"]
 TIER_LABEL = {
@@ -215,7 +217,7 @@ def page(slug, title, meta, fm, body_html, toc_tokens, links, status, *, is_home
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         '<title>%s — Civilization Wiki</title>' % html.escape(title) +
-        '<link rel="stylesheet" href="style.css"></head><body>'
+        '<link rel="stylesheet" href="style.css?v=%s"></head><body>' % CSS_VER +
         '<header class="topbar"><a class="brand" href="index.html">Civilization Wiki</a>'
         '<div class="top-meta">%s</div></header>' % freshness(status) +
         '<div class="layout">%s' % sidebar +
@@ -229,9 +231,12 @@ def page(slug, title, meta, fm, body_html, toc_tokens, links, status, *, is_home
 
 
 def build():
+    global CSS_VER
     DIST.mkdir(exist_ok=True)
     status = load_status()
-    (DIST / "style.css").write_text((ASSETS / "style.css").read_text())
+    css = (ASSETS / "style.css").read_text()
+    (DIST / "style.css").write_text(css)
+    CSS_VER = hashlib.md5(css.encode()).hexdigest()[:8]
     count = 0
     for p in sorted(WIKI.glob("*.md")):
         fm, body = split_fm(p.read_text())
