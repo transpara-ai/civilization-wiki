@@ -3,7 +3,7 @@ entity: Work (Production DAG and Task Lifecycle)
 aliases: [work, the work repo, transpara-ai/work, the flow system, Work DAG, the production DAG]
 tier: architecture
 status: compiled
-last_compiled: 2026-06-13
+last_compiled: 2026-06-14
 sources:
   - raw/transpara/dark-factory/Dark Factory - Motive, Goal, Approach.md  # §5 "Use Work for Flow, not Truth"; responsibility map; register entry B/Work
   - raw/transpara/dark-factory/reunification/2026-06-09-deployment-arc.md  # as-built review of the work repo, 2026-06-09
@@ -101,3 +101,17 @@ None of these are authorized by being listed; each needs its own design and auth
 - **Durable external URLs:** the philosophical lineage Work inherits (traceability → kernel; explicit criteria → gates) traces to Matt Searles, "20 Primitives and a Late Night" (`Searles-P1` · https://mattsearles2.substack.com/p/20-primitives-and-a-late-night), cited inside `Dark Factory - Motive, Goal, Approach.md`. Searles is *source philosophy only*, never implementation authority for Work.
 
 No source conflict was found on Work's core doctrine (flow-not-truth, native-core, rebuildable-or-evidence-backed): the orientation doc and the deployment arc agree. The one tension surfaced above is **doctrine vs. as-built** on rebuildability — the constraint is asserted; the deployment arc shows it not yet fully demonstrated across restarts. `[[wikilinks]]` are forward references; several targets ([[dark-factory]], [[hive-governance]], [[runtime-broker]], [[release-candidate]]) are not yet compiled.
+
+## Run-3 update (2026-06-14)
+
+**v16-F1 — WorkDir/Reason cwd defect** (discovered slice-1 round 6, 2026-06-12; documented in `dark-factory/reunification/2026-06-12-arc-state.md`).
+
+In `eventgraph/claude_cli.go`, the `Operate` code path correctly fails closed when `WorkDir` is not set — it refuses to run unless a working directory is explicitly provided. However, the `Reason` code path in the same file sets **no `cmd.Dir`**, meaning the reviewer subprocess inherits the daemon's current working directory rather than the task's designated workspace.
+
+The practical consequence is significant: throughout slice-1 round 6, every review was executed in the daemon's cwd (the wrong repository) rather than in the deliverable's actual workspace. The six reviews that round 6 produced — including the catalog deliverable review on `codex/fo-roles-catalog-v16` — were all premised on the wrong directory. The arc-state doc records this directly: "Still unreviewed in the FO's sense — all six reviews were premised on the wrong repo (v16-F1)."
+
+**Fix candidate (not yet implemented):** thread `WorkDir` into the `Reason` call through both the hive `pkg/loop` layer and the eventgraph provider, mirroring the behavior that `Operate` already enforces. The fix scope also includes an F2 spec-diff gate at subtask creation and an F3 quiescence detector, but the WorkDir threading is the load-bearing correctness fix.
+
+**Architectural implication:** this defect means Work's task assignability and the review→fix loop — the convergence mechanism identified as the binding constraint for the reunification effort — operated without the correct source context for an entire arc round. Readiness gates and repair cycles that depended on reviewer output in round 6 must be treated as unverified. The v16-F1 fix set is at Gate-E pending Michael's authorization.
+
+**Source:** `dark-factory/reunification/2026-06-12-arc-state.md` (DF-REUNIFY-2026-06-12-ARC-STATE, v0.3.0) — v16 findings table (F1 entry); "Catalog deliverable" row ("Still unreviewed in the FO's sense — all six reviews were premised on the wrong repo (v16-F1)"); v16 fix-set scope ("F1 WorkDir threading (hive `pkg/loop` + eventgraph provider)").

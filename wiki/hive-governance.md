@@ -3,7 +3,7 @@ entity: Hive / Governance Layer
 aliases: [hive, the hive, transpara-ai/hive, the governance layer, the civilization runtime, the hive daemon, the civic roles]
 tier: architecture
 status: compiled
-last_compiled: 2026-06-13
+last_compiled: 2026-06-14
 sources:
   - raw/transpara/dark-factory/Dark Factory - Motive, Goal, Approach.md  # responsibility map ("Hive / governance"); §7 "Govern Protected Actions Fail-Closed"; decision register B; v4.0 §12
   - raw/transpara/dark-factory/civic-roles.md  # the nine civic roles + governance section (status: superseded)
@@ -114,6 +114,18 @@ The as-built review (2026-06-09) records Hive's then-current state as: civic rol
 - [[dark-factory]] — the governed production system Hive is the governance/runtime layer of.
 - [[the-20-primitives]] — the failure-tracing seed; "authority becomes AuthorityRequest, AuthorityDecision, and ExecutionReceipt" is the primitive line Hive implements.
 
+## Run-3 update (2026-06-14)
+
+Two changes shipped on 2026-06-14 that bear directly on model-policy correctness and the transparency surface.
+
+**Observatory (`/ops/observatory`).** `site#76` (merged 2026-06-13) and `site#77` (merged 2026-06-13) together deliver a read-only transparency surface at `/ops/observatory` in the Site console. The observatory consumes the hive's `operator-projection` API alongside the work telemetry APIs (`/telemetry/status`, `/telemetry/agents/history`, `/telemetry/sse`) and renders civilization vitals, agent roster, spend-vs-cap, authority queue, and causal trace — all GET-only, all `effect=none`. This is the Gate-E "society view" surface anticipated in the deployment arc. See [[site]] for the full account; the Hive side is that its operator-projection API (`pkg/hive`) is the primary data source the observatory reads.
+
+**hive#158 — catalog reload affects next spawn (test + fix).** A new integration test (`pkg/hive/runtime_test.go`, `TestRuntimeModelCatalogReloadAffectsNextSpawn`) proves that after a role-default catalog file is modified on disk and the configured `CatalogReloadInterval` fires, the *next* `SpawnAgent` call picks up the new model assignment. The same PR also fixed a latent bug: `runtime.go`'s reload path was registering duplicate resolver sets when the manager was already initialized; that is now guarded. Significance: catalog reload is now verifiable behavior, not assumed; dynamic model selection (`pkg/hive/agentdef.go`, used by `RunConcurrent`) is covered end-to-end.
+
+**hive#159 — page role policy lookups fixed.** `pkg/hive/operator_model_policy_api.go`'s `latestModelRolePolicyUpdates` was using `readProjectionEvents` (a single-page helper) and could miss policy events that fell outside the first page of results. The fix replaces the single-page call with a paginated loop over `store.ByType(EventTypeModelRolePolicyUpdated, …)` that walks pages newest-first (chain order, not wall-clock), short-circuits once every starter role has a policy, and guards the `nil`-store and `limit ≤ 0` edge cases. A companion test covers malformed policy events. The fix closes a silent fail-open: an operator who set a model policy but had more than `defaultOperatorProjectionLimit` events in the store could see their policy silently ignored on the next projection load.
+
+> **Fail-legible.** Both PRs are in the `transpara-ai/hive` fork (origin); the upstream `lovyou-ai/hive` equivalent is managed separately and is not referenced here.
+
 ## Sources & provenance
 
 Compiled this run from:
@@ -122,6 +134,10 @@ Compiled this run from:
 - **`civic-roles.md`** (`transpara-ai/docs: dark-factory/civic-roles.md`, **`status: superseded`** → `docs/roles-catalog.md`) — the nine civic roles, the constitution (Soul / Eight Agent Rights / Fourteen Invariants), and the human-as-top-authority-tier statement. Local read path: `/Transpara/transpara-ai/data/repos/docs/dark-factory/civic-roles.md`.
 - **`reunification/2026-06-09-deployment-arc.md`** (`transpara-ai/docs`, v0.1.4, `status: review`, `authority: planning`, `canonical: false`) — the "Governance + civilization runtime" framing, the hive as-built summary (26 protected actions, `pkg/hive/agentdef.go`, `pkg/loop`/`RunConcurrent`, in-process bus, single-replica constraint), and Phases 1/2/7/8. Local read path: `/Transpara/transpara-ai/data/repos/docs/dark-factory/reunification/2026-06-09-deployment-arc.md`.
 - **Open Brain captures (2026-06-05 .. 2026-06-13)** — roles-catalog chronology and the 9-runtime + 15-governance = 24-role enumeration with sources in `pkg/hive/agentdef.go` `StarterRoleDefinitions`/`StarterAgents`; the `implementer`-is-the-only-`CanOperate=true` fact; the catalog's persistent `status: draft, canonical: false`; and the earlier Guardian role-governance prompt gap (2026-04-09, upstream hive). The "Ten Invariants" vs "Fourteen Invariants" discrepancy comes from comparing the 2026-06-05 authoring capture with the current `civic-roles.md` text.
+
+- **`pkg/hive/runtime_test.go` (hive#158, 2026-06-14)** — `TestRuntimeModelCatalogReloadAffectsNextSpawn`; proves catalog reload propagates to next spawn; also fixed duplicate resolver registration on reload in `pkg/hive/runtime.go`.
+- **`pkg/hive/operator_model_policy_api.go` (hive#159, 2026-06-14)** — paginated `latestModelRolePolicyUpdates`; fixes page-boundary miss in role-policy lookups; companion test covers malformed events.
+- **`site#76` / `site#77` (2026-06-13, merged)** — observatory (`/ops/observatory`), the Gate-E transparency surface; described in [[site]].
 
 Durable external URL (for the [[authority-layer]] divergence referenced above): Matt Searles, "The Architecture of Accountable AI" — https://mattsearles2.substack.com/p/the-architecture-of-accountable-ai [Searles-P3].
 
