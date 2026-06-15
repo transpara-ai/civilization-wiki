@@ -270,7 +270,7 @@
       { id: "v40", code: "v4.0", label: "v4.0 doctrine seed accepted; folder remains candidate", x: 7.92, swimlane: "gate", status: "candidate", href: "v4-0.html" },
       { id: "slice1", code: "G-1.2", label: "First society to finish a catalog FactoryOrder", x: 11.9, swimlane: "gate", status: "closed", href: "slice-1-completion.html" },
       { id: "gate-e", code: "Gate-E", label: "Event-1 / Gate-E authority granted (decision: Notify, docs#132)", x: 12.75, swimlane: "gate", status: "closed", href: "gate-k.html" },
-      { id: "gate-k", code: "Gate-K", label: "Loop-hardening gate unsatisfied — AC-K5 data-handling attestation + AC-K2/AC-K4 negative-test evidence pending", x: 13.9, swimlane: "gate", status: "pending", href: "gate-k.html" },
+      { id: "gate-k", code: "Gate-K", label: "Loop-hardening gate unsatisfied — AC-K5 attestation, AC-K1–K4 evidence, and the cross-family status-poster residual pending", x: 13.9, swimlane: "gate", status: "pending", href: "gate-k.html" },
     ],
     risks: [
       { id: "genesis-gap", code: "GAP", label: "Feb genesis is reconstructed, not commit-derived", x: 0.55, severity: "medium", href: "the-20-primitives.html" },
@@ -323,7 +323,7 @@
       endGoal:
         "Reach a steady-state Transpara-AI civilization that can accept new or issue-scanned work, store durable artifacts in the correct repository, open governed PRs, iterate through cross-family adversarial review, surface bulletproof work for human approval, and keep the whole run observable.",
       summary: [
-        { label: "Current gate", value: "Gate-K loop-hardening (AC-K5 attestation + AC-K2/AC-K4 evidence pending)", status: "blocked" },
+        { label: "Current gate", value: "Gate-K loop-hardening (AC-K5 attestation + remaining AC-K1–K4 / status-poster evidence pending)", status: "blocked" },
         { label: "Merge gate", value: "Seven repos protected with cross-family review", status: "done" },
         { label: "Storage posture", value: "Artifacts and PRs stay repo-native", status: "active" },
         { label: "Final mode", value: "Always-on governed factory", status: "planned" },
@@ -367,11 +367,11 @@
         {
           order: "N5",
           status: "blocked",
-          work: "Close out Gate-K: supply AC-K5 attestation and AC-K2/AC-K4 evidence (or record a waiver)",
+          work: "Close out Gate-K: supply the remaining AC-K evidence (AC-K5 attestation, AC-K2/AC-K4 negative tests, AC-K1/AC-K3 reconciliation) and accept the status-poster residual — or record a waiver",
           surface: "transpara-ai/docs, human Operator/Security attestation",
           gate: "Gate-K satisfaction (loop-hardening evidence predicate)",
           href: "gate-k.html",
-          finish: "Gate-K is held open (docs#137): AC-K5 needs the per-tool zero-retention/no-train data-handling attestation (currently recorded UNKNOWN/keep-closed), and AC-K2/AC-K4 need negative-test evidence. Closing it requires that evidence or an explicit Committee waiver; until then the loop fails closed. This is the current gate.",
+          finish: "Gate-K is held open (docs#133/#134/#137): AC-K5 needs the per-tool zero-retention/no-train data-handling attestation (recorded UNKNOWN/keep-closed); AC-K2/AC-K4 need negative-test evidence; AC-K1/AC-K3 need predicate reconciliation (branch-protection/direct-push, CODEOWNERS); and the cross-family-adversarial-review status-poster/app-pinning residual (app_id: null) must be accepted. Closing it requires that evidence or an explicit Committee waiver; until then the loop fails closed. This is the current gate.",
         },
         {
           order: "N6",
