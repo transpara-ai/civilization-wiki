@@ -12,9 +12,9 @@
       "This arc is a read lens onto the Civilization Wiki: the Searles primitive basis, the Transpara-AI fork, Hive governance, the one-civilization model, the roles catalog, the advisory memory/wiki layer, the observatory, validation runs, and the deployment arc. Past regions are classified as reconstructed, canonical, or active; planned regions exist as high-level arc plans but remain authorization-gated; faded regions are future scope.",
     domain: { start: 0, end: 15 },
     currentFocus: {
-      x: 12.75,
-      label: "Current focus: Gate-E / deployment decision pending",
-      href: "slice-1-completion.html",
+      x: 13.9,
+      label: "Current focus: Gate-K loop-hardening — AC-K5 data-handling attestation pending",
+      href: "gate-k.html",
     },
     summaryRail: [
       "origin-signal",
@@ -269,13 +269,13 @@
       { id: "v39", code: "v3.9", label: "v3.9 operative baseline accepted", x: 7.18, swimlane: "gate", status: "closed", href: "v3-9.html" },
       { id: "v40", code: "v4.0", label: "v4.0 doctrine seed accepted; folder remains candidate", x: 7.92, swimlane: "gate", status: "candidate", href: "v4-0.html" },
       { id: "slice1", code: "G-1.2", label: "First society to finish a catalog FactoryOrder", x: 11.9, swimlane: "gate", status: "closed", href: "slice-1-completion.html" },
-      { id: "gate-e", code: "Gate-E", label: "Gate-E or new grant decision pending", x: 12.75, swimlane: "gate", status: "pending", href: "gate-k.html" },
-      { id: "gate-k", code: "Gate-K", label: "Loop-hardening gate defined and unsatisfied", x: 13.9, swimlane: "gate", status: "pending", href: "gate-k.html" },
+      { id: "gate-e", code: "Gate-E", label: "Event-1 / Gate-E authority granted (decision: Notify, docs#132)", x: 12.75, swimlane: "gate", status: "closed", href: "gate-k.html" },
+      { id: "gate-k", code: "Gate-K", label: "Loop-hardening gate unsatisfied — blocked on AC-K5 data-handling attestation", x: 13.9, swimlane: "gate", status: "pending", href: "gate-k.html" },
     ],
     risks: [
       { id: "genesis-gap", code: "GAP", label: "Feb genesis is reconstructed, not commit-derived", x: 0.55, severity: "medium", href: "the-20-primitives.html" },
       { id: "role-oscillation", code: "F2", label: "Round-6 role-scope oscillation requires a spec-diff gate", x: 11.7, severity: "high", href: "roles-catalog.html" },
-      { id: "gate-e-pending", code: "PEND", label: "Gate-E / grant decision is pending; deployment is not authorized by the wiki", x: 12.85, severity: "high", href: "deployment-arc.html" },
+      { id: "gate-e-pending", code: "PEND", label: "Gate-K loop-hardening unsatisfied (AC-K5 attestation pending); deployment is not authorized by the wiki", x: 12.85, severity: "high", href: "deployment-arc.html" },
       { id: "future-autonomy", code: "AUDIT", label: "Autonomy can expand only after audit evidence expands", x: 14.38, severity: "medium", href: "capability-evolution.html" },
     ],
     decisions: [
@@ -323,7 +323,7 @@
       endGoal:
         "Reach a steady-state Transpara-AI civilization that can accept new or issue-scanned work, store durable artifacts in the correct repository, open governed PRs, iterate through cross-family adversarial review, surface bulletproof work for human approval, and keep the whole run observable.",
       summary: [
-        { label: "Current gate", value: "Gate-E / Event-1 authority", status: "blocked" },
+        { label: "Current gate", value: "Gate-K loop-hardening (AC-K5 data-handling attestation pending)", status: "blocked" },
         { label: "Merge gate", value: "Seven repos protected with cross-family review", status: "done" },
         { label: "Storage posture", value: "Artifacts and PRs stay repo-native", status: "active" },
         { label: "Final mode", value: "Always-on governed factory", status: "planned" },
@@ -348,21 +348,21 @@
         },
         {
           order: "N3",
-          status: "blocked",
+          status: "done",
           work: "Resolve Event-1 / Gate-E authority",
-          surface: "docs#115, Hive authority, human operator decision",
+          surface: "docs#132 grant, docs#115 packet, Hive authority, human operator decision",
           gate: "External Committee Event-1 grant",
-          href: "https://github.com/transpara-ai/docs/pull/115",
-          finish: "Authority is recorded, and the Gate-K packet is either merged, revised, or explicitly rejected.",
+          href: "https://github.com/transpara-ai/docs/pull/132",
+          finish: "Done: the External Committee Event-1 / Gate-K authority was granted (decision: Notify; Michael Saucier acting for the Committee, two-human approval waived for this bounded Level-0 grant) and recorded on docs main via #132 (2026-06-15); the Gate-K meta-loop packet merged via #115. Gate-K satisfaction itself is a separate gate — see N4 and the current-gate summary.",
         },
         {
           order: "N4",
-          status: "next",
+          status: "active",
           work: "Merge or reissue the Gate-K meta-loop artifacts",
           surface: "transpara-ai/docs",
           gate: "Gate-K review convention and data policy",
           href: "gate-k.html",
-          finish: "Data handling, review prompts, and loop-hardening conventions are canonical after the grant decision.",
+          finish: "Meta-loop artifacts (stage-1/stage-3 prompt templates, data-handling policy, review convention) are merged and canonical via #115; evidence-reconciliation, guardrail, and AC-K5 posture/attestation packets followed via #133-#137. Gate-K remains blocked / not satisfied, held open on AC-K5 data-handling attestation evidence plus AC-K2/AC-K4 negative-test evidence.",
         },
         {
           order: "N5",
@@ -371,7 +371,7 @@
           surface: "transpara-ai/docs",
           gate: "v4.0 authorization packet",
           href: "v4-0.html",
-          finish: "Current docs route to v4.0 as the operative baseline and retain v3.9 as closed history.",
+          finish: "v4.0 seed doctrine (DF-V4.0-ADR-001) was accepted via #127 (2026-06-12), but v4.0 stays a candidate folder and v3.9 remains the operative baseline - folder-canonical acceptance is structurally unmet (reconciliation coverage matrix). The promotion proper is still queued.",
         },
         {
           order: "N6",
@@ -380,7 +380,7 @@
           surface: "site, hive, work, docs",
           gate: "Observatory progress read model",
           href: "the-observatory.html",
-          finish: "The UI shows PR, check, authority, heartbeat, and review-loop state from live sources.",
+          finish: "Recon, transparency contract, observatory phase-3 plan, and an SSE checkpoint are recorded in docs (#128-#130); the live UI reading PR, check, authority, heartbeat, and review-loop state from live sources is not yet wired.",
         },
       ],
       complete: [
