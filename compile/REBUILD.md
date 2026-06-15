@@ -39,6 +39,7 @@ npm run verify
 ```
 
 `npm ci` installs `@playwright/test`, `jsdom`, and Chromium via the Playwright
-postinstall hook. `npm run verify` rebuilds the static site, syntax-checks the
-arc assets, runs the jsdom component smoke test, and runs the headless Chromium
-Playwright suite against `dist/`.
+browser install step in `npm run test:browser`. `npm run verify` rebuilds the
+static site, syntax-checks the arc assets, runs the jsdom component smoke test,
+and runs the headless Chromium Playwright suite against a local test server on
+`127.0.0.1:8799`, separate from the production `:8787` wiki server.

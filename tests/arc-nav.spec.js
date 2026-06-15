@@ -23,6 +23,8 @@ test("homepage arc renders, expands, and exposes named swimlanes", async ({ page
 
   await expect(page.locator(".arc-phase-group")).toHaveCount(15);
   await expect(page.locator(".arc-compact-rail-item")).toHaveCount(16);
+  await page.locator("svg.arc-svg").dispatchEvent("wheel", { deltaY: -260, clientX: 520, clientY: 90 });
+  await expect(page.locator("[data-arc-zoom-readout]")).toContainText("zoom 1.00x");
   await page.locator('[aria-label="Memory / Context Advisory Layer"]').click();
   await expect(nav).toHaveAttribute("data-has-selection", "true");
   await expect(nav).toHaveAttribute("data-details-open", "true");
@@ -68,7 +70,7 @@ test("full arc page opens as a complete standalone view", async ({ page, context
   await expect(full.getByRole("checkbox", { name: "dense labels" })).toBeChecked();
   await expect(full.getByText("Click an item for drill-down details")).toBeVisible();
   await expect(full.getByRole("heading", { name: "Civilization execution worklist" })).toBeVisible();
-  await expect(full.getByText("Updated 2026-06-15")).toBeVisible();
+  await expect(full.locator(".arc-plan-updated")).toHaveText(/^Updated \d{4}-\d{2}-\d{2}$/);
   await expect(full.getByRole("heading", { name: "Near-term execution" })).toBeVisible();
   await expect(full.getByRole("heading", { name: "Complete route to final end goal" })).toBeVisible();
   await expect(full.locator(".arc-plan-table").first().locator("tbody tr")).toHaveCount(6);

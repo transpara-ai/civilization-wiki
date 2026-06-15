@@ -8,13 +8,13 @@ module.exports = defineConfig({
   use: {
     browserName: "chromium",
     headless: true,
-    baseURL: "http://127.0.0.1:8787",
+    baseURL: "http://127.0.0.1:8799",
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "python3 -m http.server 8787 --bind 127.0.0.1 --directory dist",
-    url: "http://127.0.0.1:8787/index.html",
-    reuseExistingServer: true,
+    command: "python3 -m http.server 8799 --bind 127.0.0.1 --directory dist",
+    url: "http://127.0.0.1:8799/index.html",
+    reuseExistingServer: false,
     timeout: 10000,
   },
 });

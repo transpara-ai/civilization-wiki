@@ -4,11 +4,10 @@
   "private": true,
   "description": "Static Civilization Wiki renderer and visualization smoke tests.",
   "scripts": {
-    "postinstall": "playwright install chromium",
     "build": "python3 compile/build_site.py",
     "test:js": "node --check compile/assets/civilizationArcData.js && node --check compile/assets/civilizationArcNav.js",
     "test:dom": "node tests/arc-dom-smoke.test.js",
-    "test:browser": "playwright test",
+    "test:browser": "playwright install chromium && playwright test",
     "verify": "npm run build && npm run test:js && npm run test:dom && npm run test:browser"
   },
   "devDependencies": {

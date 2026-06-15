@@ -68,12 +68,6 @@
     return MARGIN_X + ((x - domain.start) / span) * (WIDTH - MARGIN_X * 2);
   }
 
-  function unmapX(data, px) {
-    var domain = currentDomain(data);
-    var span = domain.end - domain.start;
-    return domain.start + ((px - MARGIN_X) / (WIDTH - MARGIN_X * 2)) * span;
-  }
-
   function laneById(data, id) {
     return (data.swimlanes || []).find(function (lane) {
       return lane.id === id;
@@ -674,23 +668,6 @@
     svg.appendChild(group);
   }
 
-  function drawDependency(svg, data, from, to, className) {
-    if (!from || !to) return;
-    var sx = mapX(data, from.x);
-    var sy = markerY(data, from) + 10;
-    var ex = mapX(data, to.x);
-    var ey = markerY(data, to) + 10;
-    var mid = sx + (ex - sx) / 2;
-    var d = ["M", sx, sy, "C", mid, sy, mid, ey, ex, ey].join(" ");
-    svg.appendChild(
-      svgEl("path", {
-        d: d,
-        class: className || "arc-dependency",
-        "marker-end": "url(#arc-arrow)",
-      })
-    );
-  }
-
   function drawDependencies(svg, data) {
     if (!state.expanded || !state.showDependencies) return;
     var group = svgEl("g", { class: "arc-dependencies" });
@@ -1184,6 +1161,7 @@
     wheelTarget.addEventListener(
       "wheel",
       function (event) {
+        if (!state.expanded && !state.standalone && !event.ctrlKey && !event.metaKey) return;
         event.preventDefault();
         var rect = svg.getBoundingClientRect();
         var anchorRatio = clamp((event.clientX - rect.left) / rect.width, 0, 1);
@@ -1370,7 +1348,7 @@
 
     var zoomReadout = htmlEl("span", "arc-zoom-readout", zoomLabel());
     zoomReadout.setAttribute("data-arc-zoom-readout", "");
-    zoomReadout.title = "Zoom level. Use the mouse wheel over the arc, or Ctrl + / Ctrl -.";
+    zoomReadout.title = "Zoom level. Use the mouse wheel over an expanded arc, or Ctrl + / Ctrl -.";
 
     var full = htmlEl("a", "arc-button arc-full-link", "Open Full");
     full.href = FULL_PAGE;

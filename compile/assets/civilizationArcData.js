@@ -324,19 +324,19 @@
         "Reach a steady-state Transpara-AI civilization that can accept new or issue-scanned work, store durable artifacts in the correct repository, open governed PRs, iterate through cross-family adversarial review, surface bulletproof work for human approval, and keep the whole run observable.",
       summary: [
         { label: "Current gate", value: "Gate-E / Event-1 authority", status: "blocked" },
-        { label: "Merge gate", value: "Cross-family review required on six repos", status: "done" },
+        { label: "Merge gate", value: "Six repos protected; wiki protection is plan-blocked", status: "blocked" },
         { label: "Storage posture", value: "Artifacts and PRs stay repo-native", status: "active" },
         { label: "Final mode", value: "Always-on governed factory", status: "planned" },
       ],
       nearTerm: [
         {
           order: "N1",
-          status: "done",
-          work: "Protect the merge lane with cross-family review",
-          surface: "docs, agent, eventgraph, hive, site, work",
-          gate: "docs#131 plus branch protection",
+          status: "blocked",
+          work: "Extend cross-family protection to Civilization Wiki",
+          surface: "docs, agent, eventgraph, hive, site, work, civilization-wiki",
+          gate: "GitHub branch protection or rulesets",
           href: "https://github.com/transpara-ai/docs/pull/131",
-          finish: "Required status check is present; GitHub human review count is zero while the adversarial gate remains blocking.",
+          finish: "Six repos already require the review gate; civilization-wiki is private and GitHub returned a plan/visibility blocker for branch protection and rulesets.",
         },
         {
           order: "N2",

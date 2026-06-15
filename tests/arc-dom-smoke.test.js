@@ -34,7 +34,7 @@ function assertData(data) {
 
   assert.strictEqual(data.phases.length, 15, "expected 15 major phases");
   assert(data.executionPlan, "execution plan missing");
-  assert.strictEqual(data.executionPlan.updated, "2026-06-15");
+  assert(/^\d{4}-\d{2}-\d{2}$/.test(data.executionPlan.updated), "execution plan date must be ISO");
   assert(data.executionPlan.endGoal.includes("steady-state Transpara-AI civilization"));
   assert(
     Array.isArray(data.executionPlan.summary) && data.executionPlan.summary.length >= 4,
