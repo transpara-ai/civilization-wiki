@@ -110,6 +110,28 @@ def test_marker_fail_loud():
     print("ok test_marker_fail_loud")
 
 
+def test_frontmatter_scope_ignores_body_article_count():
+    # A body line that also matches `article_count: <n>` (e.g. a frontmatter
+    # example shown in a future article) must NOT be rewritten and must NOT
+    # trigger a false duplicate-raise that blocks the refresh. Only the YAML
+    # header is in scope.
+    with tempfile.TemporaryDirectory() as d:
+        root = pathlib.Path(d)
+        _wiki(root, {"a": "arc", "b": "concept"})
+        idx = root / "index.md"
+        idx.write_text(
+            "---\narticle_count: 0\n---\n\n"
+            "Example frontmatter shown in the meta article:\n\n"
+            "article_count: 999\n\n"
+            + stats.BEGIN_MARKER + "\nOLD\n" + stats.END_MARKER + "\n")
+        stats.write_index_block(idx, stats.compute_counts(root))
+        out = idx.read_text()
+        assert "article_count: 2" in out          # frontmatter updated to the real count
+        assert "article_count: 999" in out         # body line left untouched
+        assert out.count("article_count:") == 2    # no duplicate-collapse, no raise
+    print("ok test_frontmatter_scope_ignores_body_article_count")
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items())
            if k.startswith("test_") and callable(v)]

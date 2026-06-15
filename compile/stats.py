@@ -96,15 +96,23 @@ def _replace_between_markers(text, new_inner):
 
 
 def _set_frontmatter_article_count(text, n):
-    """Set the frontmatter article_count line to n. Absent -> unchanged.
-    Present more than once -> raise (ambiguous)."""
-    matches = list(_ARTICLE_COUNT_RE.finditer(text))
+    """Set the article_count line to n, scoped to the YAML frontmatter block ONLY
+    (never the document body). Absent from the frontmatter -> unchanged. Present
+    more than once in the frontmatter -> raise (ambiguous)."""
+    if not text.startswith("---"):
+        return text
+    end = text.find("\n---", 3)
+    if end == -1:
+        return text
+    fm = text[3:end]
+    matches = list(_ARTICLE_COUNT_RE.finditer(fm))
     if not matches:
         return text
     if len(matches) > 1:
-        raise ValueError("article_count appears %d times; expected at most one"
+        raise ValueError("article_count appears %d times in frontmatter; expected at most one"
                          % len(matches))
-    return _ARTICLE_COUNT_RE.sub(lambda m: "%s%d" % (m.group(1), n), text, count=1)
+    new_fm = _ARTICLE_COUNT_RE.sub(lambda m: "%s%d" % (m.group(1), n), fm, count=1)
+    return text[:3] + new_fm + text[end:]
 
 
 def write_index_block(index_path, counts):
