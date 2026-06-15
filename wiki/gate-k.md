@@ -3,7 +3,7 @@ entity: Gate K
 aliases: [gate-k, Gate K, interim loop hardened, development loop hardened]
 tier: architecture
 status: compiled
-last_compiled: "2026-06-14"
+last_compiled: "2026-06-15"
 sources:
   - raw/transpara/dark-factory/v4.0/implementation/epics/00-integration-arc-v4.0.md  # DF-V4.0-INTEGRATION-ARC — Gate K definition, "satisfied only when" predicate, sequencing, guardrails, authorization boundary
   - raw/transpara/dark-factory/v4.0/01-development-process-as-governed-civilization-function-v4.0.md  # DF-V4.0-ADR-001 — seed doctrine; authorization boundary carries Gates K and L as defined-but-unsatisfied
@@ -17,7 +17,7 @@ confidence:
 
 # Gate K
 
-**The first v4.0 program gate.** Gate K is the evidence predicate that the interim development loop has been hardened — meaning the controls that govern the ChatGPT/Codex/Claude build loop have been made fail-closed on `transpara-ai/docs`. It is defined in `DF-V4.0-INTEGRATION-ARC` (00-integration-arc-v4.0.md) as "Event 1 (Gate K): Interim Development Loop Tier-0 Hardening." As of 2026-06-14, Gate K is **defined and unsatisfied.** It continues the [[gates|Gates A–J]] lettering, adding two v4.0 program gates (K and L) without altering any v3.9 gate.
+**The first v4.0 program gate.** Gate K is the evidence predicate that the interim development loop has been hardened — meaning the controls that govern the ChatGPT/Codex/Claude build loop have been made fail-closed on `transpara-ai/docs`. It is defined in `DF-V4.0-INTEGRATION-ARC` (00-integration-arc-v4.0.md) as "Event 1 (Gate K): Interim Development Loop Tier-0 Hardening." As of 2026-06-15, the Event-1 authorization has been **granted** (decision *Notify*, recorded on `transpara-ai/docs#132`); Gate K itself, however, remains **defined and unsatisfied** — the loop-hardening evidence predicate is not yet met. It continues the [[gates|Gates A–J]] lettering, adding two v4.0 program gates (K and L) without altering any v3.9 gate.
 
 ## Context: where Gate K fits
 
@@ -57,7 +57,7 @@ Each criterion carries a `required_evidence` field; evidence must exist before G
 
 The acceptance checkpoint (DF-V4.0-CKPT-2026-06-12-ACCEPTANCE, 2026-06-12) contains a section "What This Acceptance Does Not Do" that states explicitly: *"Gates K and L remain defined and unsatisfied. No gate advances."* The Tier-0 structural guards adopted at that checkpoint (branch protection CODEOWNERS, `npm run verify` workflow, injection-quarantine rule, never-trust-self-report rule) are direct prerequisites for Gate K but were adopted as interim-loop standing rules, not as Gate K evidence. Gate K is formally satisfied only when the named test cases pass with recorded evidence.
 
-The authorization packet for Event 1 (DF-V4.0-EPIC-001) carries a `PENDING` AuthorityDecision. Merging the packet scopes the event; it does not grant it. Implementation may not begin until the human External Committee records the AuthorityDecision.
+The authorization packet for Event 1 (DF-V4.0-EPIC-001) originally carried a `PENDING` AuthorityDecision — merging the packet scopes the event, it does not grant it. On 2026-06-15 the human External Committee **granted** Event 1: the decision (`Notify`; Michael Saucier acting for the Committee, with the two-human approval waived for this bounded Level-0 grant) was recorded on `transpara-ai/docs` main via #132, and the Gate-K meta-loop proposal artifacts merged via #115. The grant authorizes the bounded Event-1 scope; it does **not** by itself satisfy Gate K. As of the latest reconciliation (docs#137), Gate K remains unsatisfied — held open on AC-K5 data-handling attestation (the per-tool zero-retention/no-train posture is still recorded UNKNOWN/keep-closed) plus AC-K2/AC-K4 negative-test evidence.
 
 ## Sequencing and gate failure rule
 
