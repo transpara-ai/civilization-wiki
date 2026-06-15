@@ -51,7 +51,6 @@ ALLOWLIST = {
     "trace-completeness-gate",
     "test-driven-development",
     "root-cause-analysis",
-    "the-weight",
     "saas-template-v1",
     "mission",
     "fail-closed-gates",
@@ -62,18 +61,35 @@ ALLOWLIST = {
     "wikilinks",
 }
 
+def split_fm(raw):
+    # Identical to build_site.py: the leading ---...--- frontmatter block is never
+    # rendered, so its [[...]] never become links. Strip it so the gate checks exactly
+    # what the renderer publishes (per cross-family review — codex, 2026-06-15).
+    if raw.startswith("---"):
+        e = raw.find("\n---", 3)
+        if e != -1:
+            return raw[3:e].strip("\n"), raw[e + 4:].lstrip("\n")
+    return "", raw
+
 def scan():
-    red = defaultdict(list)  # target -> [(filename, lineno)]
+    red = defaultdict(list)  # target -> [(filename, original_lineno)]
     for p in sorted(WIKI.glob("*.md")) + [INDEX]:
-        for i, line in enumerate(p.read_text().splitlines(), 1):
+        raw = p.read_text()
+        _, body = split_fm(raw)
+        offset = raw[: len(raw) - len(body)].count("\n")  # lines consumed by frontmatter
+        for i, line in enumerate(body.splitlines(), 1):
             for m in WL.finditer(line):
                 t = m.group(1)
                 if t not in SLUGS:
-                    red[t].append((p.name, i))
+                    red[t].append((p.name, i + offset))
     return red
 
 def main():
     red = scan()
+    dead = sorted(ALLOWLIST - set(red))
+    if dead:
+        print("WARN: %d ALLOWLIST entr%s match no red link (stale — prune so they can't mask a future body link): %s\n"
+              % (len(dead), "y" if len(dead) == 1 else "ies", ", ".join(dead)))
     print("=== RED LINKS (count  [tag]  target) ===")
     for t, locs in sorted(red.items(), key=lambda kv: (-len(kv[1]), kv[0])):
         tag = "OK-deferred" if t in ALLOWLIST else "BUG"
