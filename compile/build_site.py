@@ -23,6 +23,7 @@ INDEX = ROOT / "index.md"
 CSS_VER = ""
 ARC_DATA_VER = ""
 ARC_NAV_VER = ""
+ONTO_VER = ""
 
 THEME_JS = (
     '<script>(function(){'
@@ -226,9 +227,10 @@ def page(slug, title, meta, fm, body_html, toc_tokens, links, status, *, is_home
     arc_mount = ""
     if is_home:
         arc_scripts = (
+            '<script defer src="civilizationOntology.js?v=%s"></script>'
             '<script defer src="civilizationArcData.js?v=%s"></script>'
             '<script defer src="civilizationArcNav.js?v=%s"></script>'
-            % (ARC_DATA_VER, ARC_NAV_VER)
+            % (ONTO_VER, ARC_DATA_VER, ARC_NAV_VER)
         )
         arc_mount = '<div data-civilization-arc-nav></div>'
     tagline = "" if is_home else '<div class="tagline">%s%s</div>' % (
@@ -266,9 +268,10 @@ def arc_page(status):
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         '<title>Arc of Transpara-AI Civilization Development — Civilization Wiki</title>'
         '<link rel="stylesheet" href="style.css?v=%s">' % CSS_VER +
+        '<script defer src="civilizationOntology.js?v=%s"></script>'
         '<script defer src="civilizationArcData.js?v=%s"></script>'
         '<script defer src="civilizationArcNav.js?v=%s"></script>'
-        % (ARC_DATA_VER, ARC_NAV_VER) +
+        % (ONTO_VER, ARC_DATA_VER, ARC_NAV_VER) +
         '<script>(function(){try{if(localStorage.getItem("civwiki-theme")==="light")'
         'document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>'
         '</head><body class="arc-full-page">'
@@ -279,7 +282,7 @@ def arc_page(status):
 
 
 def build():
-    global CSS_VER, ARC_DATA_VER, ARC_NAV_VER
+    global CSS_VER, ARC_DATA_VER, ARC_NAV_VER, ONTO_VER
     DIST.mkdir(exist_ok=True)
     status = load_status()
 
@@ -289,6 +292,7 @@ def build():
         return hashlib.md5(asset.encode()).hexdigest()[:8]
 
     CSS_VER = copy_asset("style.css")
+    ONTO_VER = copy_asset("civilizationOntology.js")
     ARC_DATA_VER = copy_asset("civilizationArcData.js")
     ARC_NAV_VER = copy_asset("civilizationArcNav.js")
     count = 0
