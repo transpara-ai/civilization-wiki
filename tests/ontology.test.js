@@ -64,3 +64,13 @@ test('groupBy repo uses repo[0]', () => {
 test('groupBy gate puts gateless items in (ungated)', () => {
   assert.ok(O.groupBy(G, 'gate').map(l => l.lane).includes('(ungated)'));
 });
+
+test('visibleDeps returns nothing when nothing selected', () => {
+  assert.deepStrictEqual(O.visibleDeps([{ id: 'b', deps: ['a'] }], null), []);
+});
+test('visibleDeps returns only edges touching the selection', () => {
+  const items = [{ id: 'b', deps: ['a'] }, { id: 'c', deps: ['b'] }, { id: 'd', deps: ['x'] }];
+  const e = O.visibleDeps(items, 'b');
+  assert.deepStrictEqual(e.sort((p, q) => (p.from + p.to).localeCompare(q.from + q.to)),
+    [{ from: 'a', to: 'b' }, { from: 'b', to: 'c' }]);
+});

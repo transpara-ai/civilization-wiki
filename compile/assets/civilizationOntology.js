@@ -77,10 +77,21 @@
     return order.map(function (l) { return { lane: l, items: map[l] }; });
   }
 
+  function visibleDeps(items, selectedId) {
+    if (!selectedId) return [];
+    var edges = [];
+    items.forEach(function (it) {
+      (it.deps || []).forEach(function (from) {
+        if (it.id === selectedId || from === selectedId) edges.push({ from: from, to: it.id });
+      });
+    });
+    return edges;
+  }
+
   var api = {
     STATUS_ORDER: STATUS_ORDER, NODE_TYPES: NODE_TYPES, PROVENANCE: PROVENANCE,
     SETTLED: SETTLED, deriveNow: deriveNow, validateItems: validateItems,
-    groupBy: groupBy,
+    groupBy: groupBy, visibleDeps: visibleDeps,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) root.CivOntology = api;
