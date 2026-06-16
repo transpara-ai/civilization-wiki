@@ -86,7 +86,7 @@ Every element traces to corpus precedent + an external formal precedent. Corpus 
 
 ### 2.1 External frameworks — canonical sources & per-change mapping
 
-The abbreviations in the §2 ledger resolve here. Each is an accepted precedent with a canonical published source; each maps to the specific ontology changes it grounds.
+The abbreviations in the §2 ledger resolve here. Each is an accepted precedent with a canonical published source; each maps to the specific ontology changes it grounds. Full bibliographic entries with **verified online links** are in **§8 References** ([E1]–[E4]); corpus sources (Searles posts with dates/URLs, first-party doc IDs) are in §8.2–8.4.
 
 **REA — Resource–Event–Agent.** McCarthy, W.E. (1982), "The REA Accounting Model: A Generalized Framework for Accounting Systems in a Shared Data Environment," *The Accounting Review* 57(3): 554–578; standardized in ISO/IEC 15944-4 (Open-edi business transaction ontology). Core: economic reality decomposes into **Resources**, **Events** that increment/decrement them, and **Agents**, linked by *duality*, with *Commitments* preceding events.
 → **Derives:** Resource/Budget node (the "R" the draft lacked) · Event-as-core · Actor/Role ("A") · Goal/Order ≈ *Commitment* · deferred Customer/Economy ≈ external agent + economic exchange.
@@ -186,3 +186,58 @@ Nothing discovered is cut. Each carries a re-introduce trigger.
 1. Goal vs Order — one node with a `scale` facet, or two? (Order = the seed; Goal = the end-state it serves.)
 2. Should `Policy` and `Invariant` be one node with a `binding ∈ {policy, invariant}` facet, or two?
 3. Confirm the construction-arc keeps the *narrative beats* (28 reconstructed items) rather than collapsing purely to the executionPlan work — i.e., the chart stays a story, not just a kanban.
+
+---
+
+## 8. References (grounded citations)
+
+Requirement (b): every item traces to a published fact — name(s), date, and an online link where one exists. Internal first-party sources ground to repo path + doc ID (no public URL, by policy). Verified 2026-06-16.
+
+### 8.1 External precedents
+- **[E1] REA — Resources, Events, Agents.** McCarthy, W. E. (1982). "The REA Accounting Model: A Generalized Framework for Accounting Systems in a Shared Data Environment." *The Accounting Review* 57(3): 554–578 (July). Standardized in ISO/IEC 15944-4. Overview: <https://en.wikipedia.org/wiki/Resources,_Events,_Agents>
+- **[E2] Ostrom — commons design principles (the 8).** Ostrom, E. (1990). *Governing the Commons: The Evolution of Institutions for Collective Action.* Cambridge University Press (ISBN 978-0-521-40599-7). Nobel Memorial Prize in Economic Sciences, 2009. Peer-reviewed retrospective: "Governing the Commons for two decades," *International Journal of the Commons* (DOI 10.18352/ijc.325): <https://thecommonsjournal.org/articles/10.18352/ijc.325>
+- **[E3] Normative multi-agent systems (deontic: obligation/permission/prohibition).** Boella, G., van der Torre, L., & Verhagen, H. (eds.), Dagstuhl Seminar 07122, "Normative Multi-agent Systems" (March 2007): <https://www.dagstuhl.de/seminars/seminar-calendar/seminar-details/07122> · "Introduction to Normative Multiagent Systems," DROPS DagSemProc 07122.2: <https://drops.dagstuhl.de/entities/document/10.4230/DagSemProc.07122.2> · JAAMAS special issue (2008), DOI 10.1007/s10458-008-9047-8: <https://link.springer.com/article/10.1007/s10458-008-9047-8> · trust/reputation: Castelfranchi, C. & Falcone, R., *Trust Theory* (Wiley, 2010).
+- **[E4] Speech-act / commitment theory.** Austin, J. L. (1962). *How to Do Things with Words.* Oxford University Press. · Searle, J. R. (1969). *Speech Acts: An Essay in the Philosophy of Language.* Cambridge University Press. Overview: Stanford Encyclopedia of Philosophy, "Speech Acts": <https://plato.stanford.edu/entries/speech-acts/> · commitment / "conversation-for-action": Winograd, T. & Flores, F. (1986). *Understanding Computers and Cognition.* Ablex: <https://books.google.com/books/about/Understanding_Computers_and_Cognition.html?id=6TwbGGSz6NYC> · language/action perspective: <https://en.wikipedia.org/wiki/Language/action_perspective>
+
+> **Name-collision guard (restated):** John R. **Searle** [E4] (speech-act philosopher) ≠ Matt **Searles** [§8.2] (LovYou/lovyou.ai corpus author).
+
+### 8.2 Foundational philosophy — Searles (public)
+Matt Searles, *LovYou* / mind-zero, Substack `mattsearles2.substack.com`; code: <https://github.com/mattxo/mind-zero-five>. The 43-post export (range **2026-02-28 → 2026-03-24**) is indexed locally with each post's title/date/URL at `raw/searles/all-posts-1.md` — the authoritative index. Posts grounding ontology decisions:
+
+| ID | Post (title · #) | Date | URL | Grounds |
+|---|---|---|---|---|
+| S1 | 20 Primitives and a Late Night · 1 | 2026-02-28 | <https://mattsearles2.substack.com/p/20-primitives-and-a-late-night> | Event substrate; intelligence-as-operation; 20 primitives |
+| S2 | From 44 to 200 · 2 | 2026-02-28 | <https://mattsearles2.substack.com/p/from-44-to-200> | 44/200 primitives; 14 layers; is-ought gap |
+| S3 | The Architecture of Accountable AI · 3 | 2026-02-28 | <https://mattsearles2.substack.com/p/the-architecture-of-accountable-ai> | Event immutability (no Update/Delete); authority layer; AI-as-node |
+| S6 | Fourteen Layers, A Hundred Problems · 6 | 2026-02-28 | <https://mattsearles2.substack.com/p/fourteen-layers-a-hundred-problems> | the 14 layers |
+| S7 | The Four Strategies · 7 | 2026-02-28 | <https://mattsearles2.substack.com/p/the-four-strategies> | edge-weights-as-personality |
+| S8 | What It's Like to Be a Node · 8 | 2026-02-28 | <https://mattsearles2.substack.com/p/what-its-like-to-be-a-node> | node-phenomenology |
+| S9 | The Cult Test · 9 | 2026-02-28 | <https://mattsearles2.substack.com/p/the-cult-test> | permanent-tension Conflict; Cult-Test meta-norm |
+| S11 | Thirteen Graphs, One Infrastructure · 11 | 2026-03-01 | <https://mattsearles2.substack.com/p/thirteen-graphs-one-infrastructure> | graphs-as-views-over-one-event-graph (hybrid substrate) |
+| S13 | The Same 200 Primitives, Weighted Differently · 13 | 2026-03-01 | <https://mattsearles2.substack.com/p/the-same-200-primitives-weighted> | edge weights |
+| S15 | The Market Graph · 15 | 2026-03-01 | <https://mattsearles2.substack.com/p/the-market-graph> | Customer/Economy (REA echo) |
+| S19 | The Knowledge Graph · 19 | 2026-03-01 | <https://mattsearles2.substack.com/p/the-knowledge-graph> | Memory/Knowledge advisory; epistemic status |
+| S21 | The Identity Graph · 21 | 2026-03-01 | <https://mattsearles2.substack.com/p/the-identity-graph> | Reputation/Trust; Identity |
+| S23 | The Community Graph · 23 | 2026-03-01 | <https://mattsearles2.substack.com/p/the-community-graph> | Boundary/Membership/Belonging |
+| S24 | The Governance Graph · 24 | 2026-03-01 | <https://mattsearles2.substack.com/p/the-governance-graph> | governance/decision structures |
+| S25 | The Culture Graph · 25 | 2026-03-01 | <https://mattsearles2.substack.com/p/the-culture-graph> | Meaning/Value/Norm layer |
+| S26 | The Existence Graph · 26 | 2026-03-01 | <https://mattsearles2.substack.com/p/the-existence-graph> | Being (L13); Three Irreducibles |
+
+> Posts not individually keyed here (e.g. The Cognitive Grammar, Higher-Order Operations) are in the local index `raw/searles/all-posts-1.md` with exact date/URL — not re-typed here to avoid an unverified slug.
+
+### 8.3 First-party — dark-factory / hive (internal; repo path + doc ID, no public URL)
+Origin `transpara-ai/docs`, read in place at `/Transpara/transpara-ai/data/repos/docs/dark-factory/` (~322 md); per `PROVENANCE.md`. Internal — grounds to path + doc ID + date.
+
+| ID | Source | Path / doc ID | Grounds |
+|---|---|---|---|
+| F1 | Dark Factory — Motive, Goal, Approach | `docs/dark-factory/Dark Factory - Motive, Goal, Approach.md` | Decision outcomes {Autonomous, Notify, ApprovalRequired, Forbidden}; control boundaries |
+| F2 | v3.9 operative baseline (accepted 2026-06-05) | `docs/dark-factory/v3.9/` | authority/identity/SOPs, gates, FactoryOrder, Work, memory/knowledge/capability |
+| F3 | v4.0 candidate doctrine (seed 2026-06-12) | `docs/dark-factory/v4.0/` | "the factory builds the factory"; capability-evolution |
+| F4 | Civic roles (status: superseded) | `docs/dark-factory/civic-roles.md` | the 9 runtime roles → superseded by F5 |
+| F5 | Roles catalog (canonical, v3.0.0) | `docs/roles-catalog.md` | 24-role dual-layer taxonomy; CanOperate; ModelPolicy |
+| F6 | Tech crosswalk (status: review, canonical: false) | `…/epics/02-technology-decision-crosswalk-v3.9.md` · `DF-V3.9-EPIC-TECH-CROSSWALK` | concrete tech grounding |
+| F7 | Roles/invariants **code** (code is truth) | `hive/pkg/hive/agentdef.go` (`StarterAgents()`) | authoritative 9-role list; **recover the 10-vs-14 invariant count here** (§2 TODO) |
+| F8 | Wiki articles (this repo, derived) | `wiki/*.md` | each carries a "Sources & provenance" footer chaining back to S*/F* |
+
+### 8.4 Open Brain (internal; captured thoughts)
+Michael's captured-thought store (`mcp__open-brain__*`); not a committed mirror this run (`raw/open-brain/` empty per `PROVENANCE.md`). Cited by marker — e.g. `CIVWIKI-ONTOLOGY-GAP-MINE 2026-06-16` (gap-survey), `CIVWIKI-ONTOLOGY-LOCKED d3c2e95`. Internal — no public URL.
