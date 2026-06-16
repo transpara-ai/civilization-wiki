@@ -25,7 +25,7 @@ A **single unifying ontology** — a typed property graph — that governs **bot
 
 **Decision:** `Event` is declared the **substrate**: an append-only, hash-chained log with **no Update/Delete** (fail-closed by data structure). All other node types are **projections** — the current state of any node is a fold over its ordered event history. We *model* this now; we *do not build* the event store this pass. Projection 1 hand-authors the projected node instances; Projection 2 will derive them from the live EventGraph. (Provenance: §2; corner-safety: §3.)
 
-### 1.2 Node types — 13 (original 9, fixed, + 4 new core)
+### 1.2 Node types — 15 (original 9, fixed, + 6 new core)
 
 | # | Node | Definition | Construction instance | Runtime instance | New? |
 |---|------|-----------|----------------------|------------------|------|
@@ -38,14 +38,16 @@ A **single unifying ontology** — a typed property graph — that governs **bot
 | 7 | **Event** | an immutable fact at a timestamp; open `Type`; the **substrate** | "PR #10 merged" | any runtime event | fixed (§1.4) |
 | 8 | **Decision** | alters FUTURE behavior; by human/agent; mode ∈ {Autonomous, Notify, ApprovalRequired, Forbidden} | "1C1B" ruling | an AuthorityDecision | fixed (§1.4) |
 | 9 | **Conflict** | a trigger demanding resolution; trichotomy: detected-violation / surprise / permanent-tension | "Gate-E overloaded" | resource contention | fixed (§1.4) |
-| 10 | **Goal/Order (Telos)** | the purpose-bearing seed Work serves; decomposes into Work | a FactoryOrder / the north-star | a customer order | **NEW** |
-| 11 | **Policy/Invariant** | a *standing* rule (vs per-case Decision); Invariant = the always-hold subtype, fail-closed | v3.9 Decision-15; the 14 invariants | a runtime policy | **NEW** |
-| 12 | **Resource/Budget** | a scarce consumable Work draws on | build-run token/time budget | live token/$/compute budget | **NEW** |
-| 13 | **Capability** | a standing competence/permission an Actor holds, that can evolve | a compiled skill/role | a runtime capability version | **NEW** |
+| 10 | **Goal / Telos** | the end-state Orders serve; abstract, outlives any Order | the north-star ("one civilization, one business") | a customer outcome | **NEW** |
+| 11 | **Order** | the concrete, trackable seed; serves a Goal, decomposes into Work | a FactoryOrder | a customer order | **NEW** |
+| 12 | **Policy** | a *tunable* standing rule (actions→approver/mode); amendable by a Decision | v3.9 Decision-15; role permissions | a runtime authority policy | **NEW** |
+| 13 | **Invariant** | an *inviolable* always-hold property; violation HALTs (fail-closed); constitutional change only | the 14 invariants | a runtime safety invariant | **NEW** |
+| 14 | **Resource/Budget** | a scarce consumable Work draws on | build-run token/time budget | live token/$/compute budget | **NEW** |
+| 15 | **Capability** | a standing competence/permission an Actor holds, that can evolve | a compiled skill/role | a runtime capability version | **NEW** |
 
 ### 1.3 Edge types
 
-Structural: `depends-on` (Work→Work), `part-of` (Work→Phase; Work→Goal), `gated-by` (Work→Gate), `produces` (Work→Artifact), `lands-in` (Work/Artifact→Surface), `performed-by` (Work→Actor), `satisfies` (Artifact→Gate), `serves` / `decomposes-into` (Work↔Goal/Order), `governed-by` (Work/Decision→Policy), `consumes` (Work→Resource), `holds` (Actor→Capability).
+Structural: `depends-on` (Work→Work), `part-of` (Work→Phase), `serves` (Order→Goal), `decomposes-into` (Order→Work), `gated-by` (Work→Gate), `produces` (Work→Artifact), `lands-in` (Work/Artifact→Surface), `performed-by` (Work→Actor), `satisfies` (Artifact→Gate), `governed-by` (Work/Decision→Policy), `enforces` (Gate→Invariant; violation → HALT), `consumes` (Work→Resource), `holds` (Actor→Capability).
 Governance/dynamic: `advances` (Event→Work status), `triggers` (Event→Decision), `forces` (Conflict→Decision), `alters-future` (Decision→Work/Gate/Policy), `made-by` (Decision→Actor).
 Edges may carry a **`weight`** attribute (deferred semantics — see §5, "edge-weights-as-personality").
 
@@ -117,7 +119,7 @@ The abbreviations in the §2 ledger resolve here. Each is an accepted precedent 
 The renderer and all facet groupings depend ONLY on this contract — never on where items came from.
 
 **Four anti-corner invariants (adopted now):**
-1. **One schema, two renderers.** Identical 13-type schema both worlds; only the source differs. Runtime = write an adapter emitting the contract shape.
+1. **One schema, two renderers.** Identical 15-type schema both worlds; only the source differs. Runtime = write an adapter emitting the contract shape.
 2. **Event-fold compatibility.** Every item's state must be expressible as a fold over an ordered event history. No field may exist that a future event stream couldn't produce. (Hand-authored now, but shaped like a projection.)
 3. **Pure facet derivations.** Grouping, the derived-"now" frontier, and blocked-reason are pure functions of `items[]`. Swapping source → views recompute unchanged.
 4. **Ontology-validated data.** Construction data passes an allowlist validation against the schema; anything inexpressible is rejected (prevents un-portable hand-data accretion).
@@ -182,10 +184,12 @@ Nothing discovered is cut. Each carries a re-introduce trigger.
 
 ---
 
-## 7. Open questions for review
-1. Goal vs Order — one node with a `scale` facet, or two? (Order = the seed; Goal = the end-state it serves.)
-2. Should `Policy` and `Invariant` be one node with a `binding ∈ {policy, invariant}` facet, or two?
-3. Confirm the construction-arc keeps the *narrative beats* (28 reconstructed items) rather than collapsing purely to the executionPlan work — i.e., the chart stays a story, not just a kanban.
+## 7. Resolved — guided Q&A with the owner (2026-06-16)
+1. **Goal vs Order → TWO nodes.** `Goal/Telos` (end-state, abstract, served by many Orders) + `Order` (concrete seed, decomposes into Work). Different lifecycle + precedent (Order ≈ REA Commitment; Goal ≈ the Searles "why the collective exists").
+2. **Policy vs Invariant → TWO nodes.** `Policy` (tunable; per-action; amendable by a Decision) + `Invariant` (inviolable; continuously checked; HALT-on-violation; constitutional change only). Protects the fail-safe boundary — an Invariant is never a tunable Policy.
+3. **Chart stays a STORY.** Keep the ~28 reconstructed narrative beats (`provenance:reconstructed`, mostly `done`) woven with live executionPlan work — delivers the construction-legibility goal. A "hide story beats" kanban toggle is deferred to B2.
+
+Net: the ontology is now **15 node types** (9 original + 6 new core: Goal, Order, Policy, Invariant, Resource, Capability).
 
 ---
 
