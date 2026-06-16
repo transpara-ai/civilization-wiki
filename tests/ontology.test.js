@@ -95,3 +95,33 @@ test('deriveNow on empty array is 0', () => {
 test('deriveNow skips null items without throwing', () => {
   assert.strictEqual(O.deriveNow([null, { id: 'x', seq: 2, status: 'done' }]), 2);
 });
+
+// --- Migration tests (Task 5) ---
+function loadData() {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const code = fs.readFileSync(path.join(__dirname, '../compile/assets/civilizationArcData.js'), 'utf8');
+  const win = {};
+  new Function('window', code)(win);
+  return win.CIVILIZATION_ARC_DATA;
+}
+
+test('migrated arc data passes the ontology allowlist', () => {
+  const d = loadData();
+  assert.ok(Array.isArray(d.items), 'data.items must exist');
+  const r = O.validateItems(d.items);
+  assert.strictEqual(r.ok, true, 'validateItems errors:\n' + r.errors.join('\n'));
+});
+
+test('migration keeps narrative beats (reconstructed) + live work (derived) + a goal', () => {
+  const items = loadData().items;
+  assert.ok(items.filter(i => i.provenance === 'reconstructed').length >= 20, 'keep ~28 beats');
+  assert.ok(items.filter(i => i.provenance === 'derived').length >= 10, 'keep executionPlan work');
+  assert.ok(items.some(i => i.type === 'goal'), 'north-star Goal present');
+});
+
+test('every dep id resolves to a real item', () => {
+  const items = loadData().items;
+  const ids = new Set(items.map(i => i.id));
+  items.forEach(i => (i.deps || []).forEach(d => assert.ok(ids.has(d), 'dangling dep ' + d + ' on ' + i.id)));
+});
