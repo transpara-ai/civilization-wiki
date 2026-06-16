@@ -1,6 +1,6 @@
 ---
 title: Civilization Wiki — index
-last_compiled: "2026-06-14"
+last_compiled: "2026-06-15"
 run: "Run-3 (thirteen-graphs completion + arc advancement + runtime objects)"
 status: partial — approaching corpus coverage
 article_count: 92
@@ -20,7 +20,7 @@ downstream view (Mission Control, the spine/story view) is a read lens onto it.
 
 | Field | Value |
 |---|---|
-| **last_compiled** | **2026-06-14** |
+| **last_compiled** | **2026-06-15** |
 | **run** | **Run-3 (thirteen-graphs completion + arc advancement + runtime objects)** |
 | **completeness** | **PARTIAL — arc spine, philosophy, runtime objects, and thirteen-graphs complete; full corpus sweep still deferred** |
 
@@ -76,7 +76,7 @@ silently resolved):
   synthesis) and Scheme B (Post 6 / layer specs) name some layers differently.
   Both schemes are reproduced in the affected articles; this index uses Scheme A
   numbering for the tier names. See `[[thirteen-graphs]]`.
-- **Gate K and Gate L.** Defined in v4.0 but unsatisfied as of 2026-06-14. They
+- **Gate K and Gate L.** Defined in v4.0 but unsatisfied as of 2026-06-15 (Event-1 authority was granted; the gates themselves are not satisfied). They
   extend the Gate A–J lettering with a different scope (development-loop hardening
   and v3.9-to-v4.0 reconciliation). See `[[gate-k]]` and `[[gate-l]]`.
 
@@ -239,7 +239,7 @@ doctrine. The civilization's **first reunified act was to document its own
 society** (it wrote `civic-roles.md`). → **`[[the-reunification]]`**,
 **`[[the-civilization]]`**
 
-### 7 — The present (as of 2026-06-14)
+### 7 — The present (as of 2026-06-15)
 
 The governed-production effort now has a single umbrella article,
 **`[[dark-factory]]`**, synthesizing the orientation doc and the version lineage
@@ -272,9 +272,7 @@ accepted 2026-06-12). Within it:
 - **`[[deployment-arc]]` is the program plan** (authority: planning, canonical:
   false) that takes the civilization from local scratch-space runs to a
   continuously-operated production factory in eight phases.
-- **Gate-E decision is pending.** Grant-2 is exhausted. Gate-E (or a new grant)
-  is Michael Saucier's decision exclusively. The v16 daemon remains alive and
-  frozen by design pending that decision. → **`[[slice-1-completion]]`**,
+- **Gate-E hard stop resolved (2026-06-15).** Grant-2 was exhausted after round 6; the External Committee resolved the hard stop by granting **Event-1** (v4.0 Gate-K interim loop hardening; decision *Notify*, `transpara-ai/docs#132`), not a new slice-1 grant. Gate-K itself remains defined and unsatisfied (AC-K5 data-handling attestation pending — docs#137). → **`[[slice-1-completion]]`**,
   **`[[gate-k]]`**, **`[[gate-l]]`** (Gates K and L: defined and unsatisfied).
 
 ---
@@ -457,12 +455,13 @@ these has an article yet; do not read their absence as absence from the project.
   per-thought granularity is a future run.
 - **v16 fix-set implementation.** F1 (Reason-phase cwd), F2 (spec-diff gate at
   subtask creation), F3 (quiescence detector + `hive.run.completed`) are named in
-  `[[slice-1-completion]]` as the candidate scope for the next fix set pending
-  Gate-E or a new grant. Their articles are deferred until implementation.
+  `[[slice-1-completion]]` as the candidate scope for a future fix set. The 2026-06-15 Gate-E hard stop
+  resolved to Event-1 (docs#132), not a new slice-1 grant, so this fix-set
+  remains unauthorized; its articles are deferred until implementation.
 
 ---
 
-*Compiled by Run-3 on 2026-06-14. Fail-legible: gaps are marked TBD, conflicts
+*Compiled by Run-3 on 2026-06-14; reconciled 2026-06-15 for the Event-1/Gate-K grant. Fail-legible: gaps are marked TBD, conflicts
 are stated rather than resolved, and every `[[...]]` link above resolves to a real
 file in `wiki/`. Re-run the compiler to refresh `last_compiled` and fold in the
 deferred entities.*

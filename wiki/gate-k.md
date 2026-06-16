@@ -3,13 +3,17 @@ entity: Gate K
 aliases: [gate-k, Gate K, interim loop hardened, development loop hardened]
 tier: architecture
 status: compiled
-last_compiled: "2026-06-14"
+last_compiled: "2026-06-15"
 sources:
   - raw/transpara/dark-factory/v4.0/implementation/epics/00-integration-arc-v4.0.md  # DF-V4.0-INTEGRATION-ARC — Gate K definition, "satisfied only when" predicate, sequencing, guardrails, authorization boundary
   - raw/transpara/dark-factory/v4.0/01-development-process-as-governed-civilization-function-v4.0.md  # DF-V4.0-ADR-001 — seed doctrine; authorization boundary carries Gates K and L as defined-but-unsatisfied
   - raw/transpara/dark-factory/v4.0/checkpoint-2026-06-12-v4.0-doctrine-acceptance.md  # DF-V4.0-CKPT-2026-06-12-ACCEPTANCE — acceptance scope; "What This Acceptance Does Not Do" confirms K unsatisfied
   - raw/open-brain/2026-06.md  # L76, L111, L124, L134 — Gate K design and review process, AC-K lettering, cross-family review disposition
   - raw/transpara/dark-factory/v4.0/implementation/epics/epic-01-interim-loop-hardening/01-interim-loop-hardening-design-v4.0.md  # DF-V4.0-EPIC-001-DESIGN — requirements R-K1..K4, acceptance criteria AC-K1..K6 with verification_method, risk_class, required_evidence
+  - raw/transpara/dark-factory/v4.0/implementation/epics/epic-01-interim-loop-hardening/02-interim-loop-hardening-authorization-v4.0.md  # DF-V4.0-EPIC-001 authorization — Event-1 AuthorityDecision granted (Notify) 2026-06-15, recorded via transpara-ai/docs#132
+  - raw/transpara/dark-factory/v4.0/implementation/epics/epic-01-interim-loop-hardening/03-gate-k-evidence-reconciliation-v4.0.md  # Gate-K evidence reconciliation — AC-K1/AC-K3 predicate reconciliation still open, transpara-ai/docs#133
+  - raw/transpara/dark-factory/v4.0/implementation/epics/epic-01-interim-loop-hardening/04-gate-k-disposition-v4.0.md  # Gate-K guardrail disposition — AC-K2/AC-K4 negative-test evidence + cross-family status-poster/app-pinning residual open, transpara-ai/docs#134
+  - raw/transpara/dark-factory/v4.0/implementation/epics/epic-01-interim-loop-hardening/06-ac-k5-attestation-disposition-v4.0.md  # AC-K5 attestation disposition — keeps AC-K5 and Gate K not satisfied, transpara-ai/docs#137
 confidence:
   sources: primary
   claims: grounded
@@ -17,7 +21,7 @@ confidence:
 
 # Gate K
 
-**The first v4.0 program gate.** Gate K is the evidence predicate that the interim development loop has been hardened — meaning the controls that govern the ChatGPT/Codex/Claude build loop have been made fail-closed on `transpara-ai/docs`. It is defined in `DF-V4.0-INTEGRATION-ARC` (00-integration-arc-v4.0.md) as "Event 1 (Gate K): Interim Development Loop Tier-0 Hardening." As of 2026-06-14, Gate K is **defined and unsatisfied.** It continues the [[gates|Gates A–J]] lettering, adding two v4.0 program gates (K and L) without altering any v3.9 gate.
+**The first v4.0 program gate.** Gate K is the evidence predicate that the interim development loop has been hardened — meaning the controls that govern the ChatGPT/Codex/Claude build loop have been made fail-closed on `transpara-ai/docs`. It is defined in `DF-V4.0-INTEGRATION-ARC` (00-integration-arc-v4.0.md) as "Event 1 (Gate K): Interim Development Loop Tier-0 Hardening." As of 2026-06-15, the Event-1 authorization has been **granted** (decision *Notify*, recorded on `transpara-ai/docs#132`); Gate K itself, however, remains **defined and unsatisfied** — the loop-hardening evidence predicate is not yet met. It continues the [[gates|Gates A–J]] lettering, adding two v4.0 program gates (K and L) without altering any v3.9 gate.
 
 ## Context: where Gate K fits
 
@@ -57,7 +61,7 @@ Each criterion carries a `required_evidence` field; evidence must exist before G
 
 The acceptance checkpoint (DF-V4.0-CKPT-2026-06-12-ACCEPTANCE, 2026-06-12) contains a section "What This Acceptance Does Not Do" that states explicitly: *"Gates K and L remain defined and unsatisfied. No gate advances."* The Tier-0 structural guards adopted at that checkpoint (branch protection CODEOWNERS, `npm run verify` workflow, injection-quarantine rule, never-trust-self-report rule) are direct prerequisites for Gate K but were adopted as interim-loop standing rules, not as Gate K evidence. Gate K is formally satisfied only when the named test cases pass with recorded evidence.
 
-The authorization packet for Event 1 (DF-V4.0-EPIC-001) carries a `PENDING` AuthorityDecision. Merging the packet scopes the event; it does not grant it. Implementation may not begin until the human External Committee records the AuthorityDecision.
+The authorization packet for Event 1 (DF-V4.0-EPIC-001) originally carried a `PENDING` AuthorityDecision — merging the packet scopes the event, it does not grant it. On 2026-06-15 the human External Committee **granted** Event 1: the decision (`Notify`; Michael Saucier acting for the Committee, with the two-human approval waived for this bounded Level-0 grant) was recorded on `transpara-ai/docs` main via #132, and the Gate-K meta-loop proposal artifacts merged via #115. The grant authorizes the bounded Event-1 scope; it does **not** by itself satisfy Gate K. As of the latest reconciliation (docs#133/#134/#137), Gate K remains unsatisfied. Its open closeout conditions are: **AC-K5** data-handling attestation (the per-tool zero-retention/no-train posture is still recorded UNKNOWN/keep-closed); **AC-K2/AC-K4** negative-test evidence; **AC-K1/AC-K3** predicate reconciliation (branch-protection / direct-push and CODEOWNERS routing); and final acceptance of the `cross-family-adversarial-review` **status-poster bridge or structural app pinning** (the check currently posts with `app_id: null`). Gate K closes only when these are satisfied with recorded evidence or explicitly waived.
 
 ## Sequencing and gate failure rule
 
@@ -87,5 +91,7 @@ The gates article ([[gates]]) flags a potential lettering collision: v3.9 uses l
 - **Primary:** `raw/transpara/dark-factory/v4.0/checkpoint-2026-06-12-v4.0-doctrine-acceptance.md` (DF-V4.0-CKPT-2026-06-12-ACCEPTANCE) — "Gates K and L remain defined and unsatisfied" (§ "What This Acceptance Does Not Do"). Read in full this compilation.
 - **Secondary:** `raw/open-brain/2026-06.md` — L76 (arc doc summary, Gate K definition quote), L111 (lettering collision concern raised in same-family review), L124 (Codex found no lettering-collision finding, item closed), L134 (merged PRs #79 and #80 with Gates K/L arc). Read lines 60–143 this compilation.
 - **Context:** `wiki/gates.md` — existing Gates A–J article (tier: architecture, compiled 2026-06-13) read in full for cross-linking and house style.
+
+- **Live state (2026-06-15):** `transpara-ai/docs#132` (Event-1 / Gate-K authority grant, decision *Notify*), `#133` (Gate-K evidence reconciliation — AC-K1/AC-K3), `#134` (Gate-K guardrail disposition — AC-K2/AC-K4 plus the cross-family status-poster / app-pinning residual), and `#137` (AC-K5 attestation disposition). These merged docs PRs post-date the cited raw checkpoint sources and ground the Current-status grant and open-blocker claims; the matching epic-01 packets (02/03/04/06) are listed in frontmatter `sources:`.
 
 No Searles-post URL applies to Gate K; it is a v4.0 Dark Factory engineering construct with no upstream post provenance. `[[wikilinks]]` marked ⚠ are forward references to articles not yet compiled.
