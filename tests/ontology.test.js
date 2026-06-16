@@ -53,10 +53,10 @@ test('validateItems rejects invalid enum + duplicate id + missing fields', () =>
 });
 
 const G = [
-  { id: 'a', type: 'work', status: 'done',    blocked: false, seq: 1, sprint: 'hive',   gate: 'v3.9',  repo: ['hive'] },
-  { id: 'b', type: 'work', status: 'active',  blocked: true,  seq: 2, sprint: 'gov',    gate: 'gate-k', repo: ['docs'] },
-  { id: 'c', type: 'work', status: 'planned', blocked: false, seq: 3, sprint: 'deploy',                 repo: ['site'] },
-  { id: 'd', type: 'work', status: 'active',  blocked: false, seq: 4, sprint: 'wiki',   gate: 'gate-k', repo: ['site'] },
+  { id: 'a', type: 'work', status: 'done',    blocked: false, seq: 1, sprint: 'hive',   gate: 'v3.9',  family: 'v3.9 milestones (A-J)', repo: ['hive'] },
+  { id: 'b', type: 'work', status: 'active',  blocked: true,  seq: 2, sprint: 'gov',    gate: 'gate-k', family: 'v4.0 (K/L)',           repo: ['docs'] },
+  { id: 'c', type: 'work', status: 'planned', blocked: false, seq: 3, sprint: 'deploy',                                                 repo: ['site'] },
+  { id: 'd', type: 'work', status: 'active',  blocked: false, seq: 4, sprint: 'wiki',   gate: 'gate-k', family: 'v4.0 (K/L)',           repo: ['site'] },
 ];
 test('groupBy status: fixed band order; each item in exactly one lane (blocked overrides)', () => {
   assert.deepStrictEqual(O.groupBy(G, 'status').map(l => l.lane), ['done', 'active', 'blocked', 'planned']);
@@ -68,8 +68,34 @@ test('groupBy status: fixed band order; each item in exactly one lane (blocked o
 test('groupBy repo uses repo[0]', () => {
   assert.deepStrictEqual(O.groupBy(G, 'repo').map(l => l.lane), ['docs', 'hive', 'site']);
 });
-test('groupBy gate puts gateless items in (ungated)', () => {
-  assert.ok(O.groupBy(G, 'gate').map(l => l.lane).includes('(ungated)'));
+test('groupBy gate lanes by family; family-less items fall in (ungated); fixed family order', () => {
+  const lanes = O.groupBy(G, 'gate');
+  // Lane = item.family (not item.gate); ordered by GATE_FAMILIES with (ungated) last.
+  assert.deepStrictEqual(lanes.map(l => l.lane), [
+    'v3.9 milestones (A-J)',
+    'v4.0 (K/L)',
+    '(ungated)',
+  ]);
+  // Item 'c' has no family → (ungated). Items b & d share the v4.0 family.
+  const ungated = lanes.find(l => l.lane === '(ungated)');
+  assert.deepStrictEqual(ungated.items.map(i => i.id), ['c']);
+  const v40 = lanes.find(l => l.lane === 'v4.0 (K/L)');
+  assert.deepStrictEqual(v40.items.map(i => i.id).sort(), ['b', 'd']);
+});
+test('groupBy gate appends unknown families alphabetically, before (ungated)', () => {
+  const items = [
+    { id: 'u', type: 'work', status: 'done', blocked: false, seq: 1, sprint: 's', repo: ['r'] }, // no family → (ungated)
+    { id: 'z', type: 'gate', status: 'done', blocked: false, seq: 2, sprint: 's', family: 'Zeta family', repo: ['r'] },
+    { id: 'k', type: 'gate', status: 'done', blocked: false, seq: 3, sprint: 's', family: 'v4.0 (K/L)', repo: ['r'] },
+    { id: 'm', type: 'gate', status: 'done', blocked: false, seq: 4, sprint: 's', family: 'Alpha family', repo: ['r'] },
+  ];
+  // Known family first (v4.0), then unknowns alphabetically (Alpha, Zeta), then (ungated) last.
+  assert.deepStrictEqual(O.groupBy(items, 'gate').map(l => l.lane), [
+    'v4.0 (K/L)',
+    'Alpha family',
+    'Zeta family',
+    '(ungated)',
+  ]);
 });
 
 test('visibleDeps returns nothing when nothing selected', () => {

@@ -287,7 +287,10 @@
     if (dim === "status") return item.blocked ? "blocked" : item.status;
     if (dim === "repo") return (item.repo && item.repo[0]) || "(none)";
     if (dim === "sprint") return item.sprint || "(none)";
-    if (dim === "gate") return item.gate || "(ungated)";
+    // Gate dimension lanes by FAMILY (mirrors CivOntology.laneOf, which groupBy
+    // uses for the rendered swimlanes) — not item.gate — so the selected-panel
+    // "Swimlane" label agrees with the lane the node is actually drawn in.
+    if (dim === "gate") return item.family || "(ungated)";
     return "(none)";
   }
 
@@ -1021,34 +1024,80 @@
   // .arc-expanded, which is display:none in the compact default view), so it
   // is visible in the default render.
   // ------------------------------------------------------------------
+  // Fixed family order for the Gates section, mirroring CivOntology.GATE_FAMILIES
+  // (minus "(ungated)" — gate items always carry a family). Any gate family not
+  // listed here is appended afterwards (alphabetical) so the key never silently
+  // drops a newly-introduced family.
+  var GATE_KEY_FAMILIES = [
+    "v3.9 milestones (A-J)",
+    "Deployment register (G-0..G-8.4)",
+    "v4.0 (K/L)",
+    "Release & security gates (v3.9)",
+  ];
+
+  // Code key sections, DERIVED from data (never hardcoded ids) so the key cannot
+  // go stale as items are added/removed. Each section filters data.items by a
+  // facet and sorts deterministically; the Gates section is sub-grouped by family
+  // (GATE_KEY_FAMILIES order, then seq within each family) and may run long —
+  // every gate is listed so the diamonds on the chart stay decodable.
   function codeKeyGroups(data) {
-    var byId = {};
-    (data.items || []).forEach(function (it) {
-      if (it && it.id) byId[it.id] = it;
+    var items = (data.items || []).filter(function (it) {
+      return it && it.code;
     });
-    function pick(ids) {
-      return ids
-        .map(function (id) { return byId[id]; })
-        .filter(function (it) { return it && it.code; });
+    var bySeq = function (a, b) {
+      return (a.seq || 0) - (b.seq || 0);
+    };
+    // Map an executionPlan row's `order` (e.g. "N3", "C7") to its item by code,
+    // so the worklist/route sections follow the plan's own ordering from data.
+    var byCode = {};
+    items.forEach(function (it) {
+      byCode[it.code] = it;
+    });
+    function fromPlan(rows) {
+      return (rows || [])
+        .map(function (row) { return byCode[row.order]; })
+        .filter(Boolean);
     }
+    var plan = data.executionPlan || {};
+
+    var goals = items.filter(function (it) { return it.type === "goal"; }).sort(bySeq);
+    var decisions = items.filter(function (it) { return it.type === "decision"; }).sort(bySeq);
+    // Narrative beats: reconstructed work items (the arc's story beats). The
+    // execution-plan N/C work items are provenance "derived", so this facet
+    // separates them cleanly without re-listing ids.
+    var beats = items
+      .filter(function (it) { return it.type === "work" && it.provenance === "reconstructed"; })
+      .sort(bySeq);
+
+    // Gates grouped by family, in GATE_KEY_FAMILIES order then seq; unknown
+    // families appended alphabetically so none are dropped.
+    var gates = items.filter(function (it) { return it.type === "gate"; });
+    var gateFamilies = {};
+    var gateFamilyOrder = GATE_KEY_FAMILIES.slice();
+    gates.forEach(function (it) {
+      var fam = it.family || "(ungated)";
+      if (!gateFamilies[fam]) {
+        gateFamilies[fam] = [];
+        if (gateFamilyOrder.indexOf(fam) === -1) gateFamilyOrder.push(fam);
+      }
+      gateFamilies[fam].push(it);
+    });
+    var gateGroups = gateFamilyOrder
+      .filter(function (fam) { return gateFamilies[fam]; })
+      .map(function (fam) {
+        return { title: "Gates · " + fam, items: gateFamilies[fam].slice().sort(bySeq) };
+      });
+
     return [
-      { title: "Goal", items: pick(["goal-north-star"]) },
-      { title: "Near-term worklist", items: pick(["n1", "n2", "n3", "n4", "n5", "n6", "n7"]) },
-      { title: "Delivery route", items: pick(["c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10"]) },
-      { title: "Gates", items: pick(["v39", "v40", "slice1", "gate-e", "gate-k"]) },
-      { title: "Decisions", items: pick(["external-frameworks", "one-civilization", "read-lens", "site-readonly"]) },
-      {
-        title: "Narrative beats",
-        items: pick([
-          "origin-signal", "primitive-frame", "civic-ai", "hive-runtime", "civilization-north-star",
-          "architecture", "agent-model", "role-catalog", "memory-layer", "prompt-canon",
-          "rituals", "governance", "decisions", "artifacts", "dashboards",
-          "wiki-layer", "visualization", "human-layer", "repo-layer", "prototype",
-          "tests", "demo-validation", "deployment", "operations", "feedback",
-          "iteration", "scale", "stewardship",
-        ]),
-      },
-    ];
+      { title: "Goal", items: goals },
+      { title: "Near-term worklist", items: fromPlan(plan.nearTerm) },
+      { title: "Delivery route", items: fromPlan(plan.complete) },
+    ]
+      .concat(gateGroups)
+      .concat([
+        { title: "Decisions", items: decisions },
+        { title: "Narrative beats", items: beats },
+      ]);
   }
 
   function buildCodeKey(data) {

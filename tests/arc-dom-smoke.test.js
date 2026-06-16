@@ -39,6 +39,38 @@ function assertData(data) {
     assert(it.code.trim().length > 0, `item '${it.id}' code must be non-empty`);
   });
 
+  // ── Code uniqueness: codes label nodes and the code key, so they must be unique ──
+  const codeCounts = new Map();
+  data.items.forEach((it) => {
+    codeCounts.set(it.code, (codeCounts.get(it.code) || 0) + 1);
+  });
+  const dupedCodes = Array.from(codeCounts.entries())
+    .filter(([, n]) => n > 1)
+    .map(([c]) => c);
+  assert.strictEqual(
+    dupedCodes.length,
+    0,
+    `every item.code must be unique; duplicates: ${dupedCodes.join(", ")}`
+  );
+
+  // ── Gate grouping lanes by family: the "family lanes, all gates" model ──
+  // grouping="gate" lanes by item.family; the expanded gate landscape must
+  // surface the three load-bearing gate families (ordered by GATE_FAMILIES).
+  const gateLanes = O.groupBy(data.items, "gate").map((l) => l.lane);
+  ["v3.9 milestones (A-J)", "Deployment register (G-0..G-8.4)", "v4.0 (K/L)"].forEach(
+    (fam) => {
+      assert(
+        gateLanes.includes(fam),
+        `grouping="gate" must include the '${fam}' lane; saw: ${gateLanes.join(" | ")}`
+      );
+    }
+  );
+  // GATE_FAMILIES ordering: the v3.9-milestones lane precedes the v4.0 lane.
+  assert(
+    gateLanes.indexOf("v3.9 milestones (A-J)") < gateLanes.indexOf("v4.0 (K/L)"),
+    `gate lanes should follow GATE_FAMILIES order; saw: ${gateLanes.join(" | ")}`
+  );
+
   // Derived "now" must be a finite, positive frontier.
   const now = O.deriveNow(data.items);
   assert(Number.isFinite(now), `deriveNow must be finite, got ${now}`);
@@ -237,6 +269,39 @@ function assertRenderedDom() {
   );
   assert(keyText.includes("Gate-K"), "code key must include the 'Gate-K' code");
 
+  // ── Gate code key derives from data, not a hardcoded 5 ──
+  // The dataset expanded from 5 gates to 59 across families; the key must now
+  // surface the newly-added gates that the old hardcoded list omitted. Assert a
+  // representative new code from each load-bearing family is present:
+  //   Gate-A  → "v3.9 milestones (A-J)" (was missing)
+  //   G-3.2   → "Deployment register (G-0..G-8.4)" (G-series, was missing)
+  //   Gate-L  → "v4.0 (K/L)" (was missing; only Gate-K used to appear)
+  ["Gate-A", "G-3.2", "Gate-L"].forEach((code) => {
+    const it = data.items.find((i) => i.code === code);
+    assert(it && it.type === "gate", `fixture: ${code} should be a gate item`);
+    assert(
+      keyText.includes(code),
+      `code key must include the newly-derived gate code '${code}' (was missing when the gate list was hardcoded to 5)`
+    );
+  });
+  // Every gate in the data must appear in the key — the key is data-derived, so
+  // a missing gate code means the derivation regressed (e.g. back to a hardcode).
+  data.items
+    .filter((i) => i.type === "gate")
+    .forEach((g) => {
+      assert(
+        keyText.includes(g.code),
+        `code key must include every gate code; missing '${g.code}'`
+      );
+    });
+  // The Gates section is sub-grouped by family — the family names appear as key
+  // group titles, in GATE_FAMILIES order (v3.9 milestones before v4.0).
+  assert(
+    keyText.indexOf("v3.9 milestones (A-J)") < keyText.indexOf("v4.0 (K/L)") &&
+      keyText.indexOf("v3.9 milestones (A-J)") !== -1,
+    "code key Gates section should be grouped by family in GATE_FAMILIES order"
+  );
+
   // Blocker overlay: the data has at least one blocked item, so an overlay must render.
   if (data.items.some((it) => it.blocked)) {
     assert(nav.querySelector(".arc-item-blocked"), "blocked items present but no blocker overlay rendered");
@@ -255,7 +320,29 @@ function assertRenderedDom() {
   assert(nav.textContent.includes("Click an item for drill-down details"), "drill-down instruction missing");
 
   // ── T8: swimlane grouping toggle present ──
-  assert(nav.querySelector("[data-arc-grouping]"), "grouping control missing");
+  const groupingControl = nav.querySelector("[data-arc-grouping]");
+  assert(groupingControl, "grouping control missing");
+
+  // ── Gate grouping renders family swimlanes ("family lanes, all gates") ──
+  // Drive the SAME control the user does: set grouping="gate" and dispatch the
+  // change event, then assert the family lanes render as swimlane bands. Lane
+  // names live in each label's <title> (the full, untruncated lane name).
+  groupingControl.value = "gate";
+  groupingControl.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
+  const gateLaneTitles = Array.prototype.slice
+    .call(nav.querySelectorAll(".arc-swimlane-label title"))
+    .map((t) => (t.textContent || "").trim());
+  ["v3.9 milestones (A-J)", "Deployment register (G-0..G-8.4)", "v4.0 (K/L)"].forEach(
+    (fam) => {
+      assert(
+        gateLaneTitles.includes(fam),
+        `grouping="gate" should render a '${fam}' swimlane; saw: ${gateLaneTitles.join(" | ")}`
+      );
+    }
+  );
+  // Restore the default grouping so later assertions see the clean render.
+  groupingControl.value = "status";
+  groupingControl.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
 
   // ── T9: dependency edges are selection-scoped ──
   // Global deps-toggle was removed; no dependencies render until an item is selected.

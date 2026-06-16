@@ -10,6 +10,15 @@
     "policy", "invariant", "resource", "capability"];
   var PROVENANCE = ["reconstructed", "derived"];
   var STATUS_LANES = ["done", "active", "blocked", "planned", "future"];
+  // Fixed lane order for the "gate" grouping, which lanes by gate FAMILY.
+  // Lanes not in this list are appended alphabetically, before "(ungated)".
+  var GATE_FAMILIES = [
+    "v3.9 milestones (A-J)",
+    "Deployment register (G-0..G-8.4)",
+    "v4.0 (K/L)",
+    "Release & security gates (v3.9)",
+    "(ungated)",
+  ];
 
   // "now" on the sequence axis = the frontier: the largest seq among settled (done/active) items.
   function deriveNow(items) {
@@ -50,7 +59,7 @@
     if (dim === "status") return it.blocked ? "blocked" : it.status;
     if (dim === "repo") return (it.repo && it.repo[0]) || "(none)";
     if (dim === "sprint") return it.sprint || "(none)";
-    if (dim === "gate") return it.gate || "(ungated)";
+    if (dim === "gate") return it.family || "(ungated)";
     return "(none)";
   }
   function groupBy(items, dim) {
@@ -60,8 +69,24 @@
       if (!map[lane]) { map[lane] = []; order.push(lane); }
       map[lane].push(it);
     });
-    if (dim === "status") order = STATUS_LANES.filter(function (l) { return map[l]; });
-    else order.sort();
+    if (dim === "status") {
+      order = STATUS_LANES.filter(function (l) { return map[l]; });
+    } else if (dim === "gate") {
+      // Order present lanes by GATE_FAMILIES; any lane not in that list is
+      // appended alphabetically, immediately before "(ungated)".
+      var known = GATE_FAMILIES.filter(function (l) { return map[l]; });
+      var extras = order.filter(function (l) {
+        return GATE_FAMILIES.indexOf(l) === -1;
+      }).sort();
+      var ungatedIdx = known.indexOf("(ungated)");
+      if (ungatedIdx === -1) {
+        order = known.concat(extras);
+      } else {
+        order = known.slice(0, ungatedIdx).concat(extras, known.slice(ungatedIdx));
+      }
+    } else {
+      order.sort();
+    }
     return order.map(function (l) { return { lane: l, items: map[l] }; });
   }
 
