@@ -71,3 +71,18 @@ test("arc remains inside the mobile viewport", async ({ page }) => {
   const overflow = await nav.evaluate((el) => el.scrollWidth - el.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
+
+test('reflows on resize without horizontal page scroll', async ({ page }) => {
+  await page.goto('/civilization-arc.html');
+  // Use a viewport wider than minContent (1632px) so the SVG width is frame-driven at the wide size.
+  await page.setViewportSize({ width: 1800, height: 900 });
+  await page.waitForTimeout(60); // let initial render settle
+  const wide = await page.locator('.arc-svg').getAttribute('viewBox');
+  await page.setViewportSize({ width: 760, height: 900 });
+  await page.waitForTimeout(120); // allow rAF reflow
+  const narrow = await page.locator('.arc-svg').getAttribute('viewBox');
+  expect(narrow).not.toBe(wide); // viewBox width recomputed for the new container
+  // the chart frame scrolls horizontally, never the document body
+  const bodyScrollsX = await page.evaluate(() => document.body.scrollWidth > window.innerWidth + 1);
+  expect(bodyScrollsX).toBeFalsy();
+});

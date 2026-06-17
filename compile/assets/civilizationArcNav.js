@@ -449,6 +449,20 @@
       });
     }
 
+    if (typeof ResizeObserver !== "undefined" && !s.resizeObserver) {
+      s.lastWidth = Math.round(s.frame.getBoundingClientRect().width) || 0;
+      s.resizeObserver = new ResizeObserver(function () {
+        var w = Math.round(s.frame.getBoundingClientRect().width);
+        if (!w || Math.abs(w - s.lastWidth) < 2) return; // ignore sub-pixel / height-only changes
+        s.lastWidth = w;
+        if (s.raf && typeof cancelAnimationFrame !== "undefined") cancelAnimationFrame(s.raf);
+        var schedule = (typeof requestAnimationFrame !== "undefined")
+          ? requestAnimationFrame : function (fn) { return setTimeout(fn, 16); };
+        s.raf = schedule(function () { render(root, data); });
+      });
+      s.resizeObserver.observe(s.frame); // observe the FRAME (container), not the svg, to avoid feedback
+    }
+
     // Reflect state on the root for any CSS hooks.
     root.setAttribute("data-has-selection", s.selectedId != null ? "true" : "false");
 

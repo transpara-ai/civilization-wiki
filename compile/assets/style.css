@@ -1054,6 +1054,7 @@ code,pre,.mono{font-family:var(--mono)}
   margin:0;
   padding:0 18px;
   overflow-x:auto;
+  overflow-y:hidden;
 }
 .arc-tracks-nav[data-arc-standalone="true"] .arc-frame,
 .arc-full-page .arc-tracks-nav .arc-frame,
