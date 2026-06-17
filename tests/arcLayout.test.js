@@ -22,8 +22,9 @@ test('buildRankScale spaces distinct seqs equidistantly across the plot', () => 
 
 test('items sharing a seq share an x-column', () => {
   const sx = L.buildRankScale([{ seq: 1 }, { seq: 2 }, { seq: 2 }], 0, 200);
-  assert.strictEqual(sx(2), sx(2));
-  assert.strictEqual(sx.rankOf(2), 1);
+  assert.strictEqual(sx.distinctCount, 2);   // the two seq=2 items collapse to one column
+  assert.strictEqual(sx.rankOf(2), 1);       // seq 2 is the last distinct column
+  assert.strictEqual(sx(2), 200);            // last distinct column maps to plotRight
 });
 
 test('buildLayout yields 3 tracks; gates expands into 4 family rows', () => {
