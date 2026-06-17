@@ -94,6 +94,21 @@ function assertData(data) {
   // executionPlan is still present and consumed by the plan board.
   assert(data.executionPlan, "execution plan missing");
   assert(/^\d{4}-\d{2}-\d{2}$/.test(data.executionPlan.updated), "execution plan date must be ISO");
+
+  // Gate K is pre-live closed but remains the machine-readable go-live blocker.
+  const gateK = data.items.find((it) => it.id === "gate-k");
+  assert(gateK, "gate-k item missing");
+  assert.strictEqual(gateK.status, "active");
+  assert.strictEqual(gateK.blocked, true);
+  assert.strictEqual(gateK.blocked_reason, "go-live-revalidation");
+  assert.strictEqual(gateK.boundary_status, "pre-live-closed-go-live-blocked");
+  assert.strictEqual(gateK.go_live_revalidation, "blocked");
+  assert(
+    O.groupBy(data.items, "status").some((lane) =>
+      lane.lane === "blocked" && lane.items.some((it) => it.id === "gate-k")
+    ),
+    "gate-k must remain in the machine-readable blocked lane"
+  );
 }
 
 // ── Rendered DOM: the new chart structure exists ──
@@ -107,6 +122,8 @@ function assertRenderedDom() {
   assert(nav.querySelectorAll(".arc-item-group").length > 0, "no item node groups produced");
   assert(nav.querySelectorAll(".arc-marker").length > 0, "no item shapes produced");
   assert(nav.querySelector(".arc-now-line"), "now-line element missing");
+  assert.match(nav.querySelector(".arc-now-panel").textContent, /Gate-K/);
+  assert.match(nav.querySelector(".arc-now-panel").textContent, /blocked/i);
 }
 
 const { test } = require("node:test");
@@ -195,6 +212,29 @@ test('javascript: href is never assigned to any rendered link (XSS hardening)', 
   triggerItem(nav, items[4], dom);
   const relLinks = [...nav.querySelectorAll("a")].filter((a) => (a.getAttribute("href") || "") === "the-civilization.html");
   assert.ok(relLinks.length >= 1, "Bare relative href 'the-civilization.html' must render a link (safeHref must not reject it)");
+});
+
+test('Gate K renders as the blocked go-live frontier with evidence links', () => {
+  const { nav, svg, dom } = mountArc();
+  const gate = svg.querySelector('[data-arc-item="gate-k"]');
+  assert(gate, "gate-k marker missing");
+  assert(gate.classList.contains("arc-blocked"), "gate-k marker must carry blocked class");
+
+  gate.dispatchEvent(new dom.window.MouseEvent('mouseover', { bubbles: true }));
+  const tip = nav.querySelector('.arc-tooltip');
+  assert.match(tip.textContent, /gate · blocked/i);
+
+  gate.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  const detail = nav.querySelector('.arc-detail-panel');
+  assert.match(detail.textContent, /Blocked/);
+  assert.match(detail.textContent, /go-live/i);
+  const evidenceHrefs = [...detail.querySelectorAll('.arc-detail-evidence-link')]
+    .map((a) => a.getAttribute("href"));
+  assert(evidenceHrefs.includes("https://github.com/transpara-ai/docs/pull/138"));
+  assert(
+    evidenceHrefs.includes("https://github.com/transpara-ai/docs/commit/f8ed4a9dc4612d56959f9f8b5d398c4f58b3655d"),
+    "Gate K detail must link the docs#138 merge commit"
+  );
 });
 
 const data = loadArcData();

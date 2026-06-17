@@ -679,8 +679,8 @@
         type: "gate",
         label: "Loop-hardening gate closed for pre-live by waiver — live boundary still requires go-live revalidation",
         status: "active",
-        blocked: false,
-        blocked_reason: null,
+        blocked: true,
+        blocked_reason: "go-live-revalidation",
         boundary_status: "pre-live-closed-go-live-blocked",
         go_live_revalidation: "blocked",
         provenance: "reconstructed",
@@ -693,6 +693,10 @@
         deps: [],
         href: "gate-k.html",
         note: "docs#138 merged the explicit Gate K pre-go-live waiver (merge f8ed4a9dc4612d56959f9f8b5d398c4f58b3655d): N5/Gate K are closed for pre-live sequencing only. This is not production go-live clearance and does not authorize live secrets, customer data, protected runtime execution, deploys, value allocation, or any autonomy increase.",
+        evidence_links: [
+          { label: "docs#138", href: "https://github.com/transpara-ai/docs/pull/138" },
+          { label: "docs merge f8ed4a9", href: "https://github.com/transpara-ai/docs/commit/f8ed4a9dc4612d56959f9f8b5d398c4f58b3655d" },
+        ],
       },
 
       // ── Reconstructed gate landscape (provenance: reconstructed) ─────────
@@ -1094,6 +1098,10 @@
         deps: [],
         href: "deployment-arc.html",
         note: "Packet G-0 executed and closed via docs#119 (merge b5cf13121b660304d27e63f9314dde5e8660ea4b): forensic evidence was preserved as annotated tags, stale branches were deleted after fail-closed head re-checks, run-findings refs were updated, and auto-delete-heads was recorded. No further G-0 authority remains.",
+        evidence_links: [
+          { label: "docs#119", href: "https://github.com/transpara-ai/docs/pull/119" },
+          { label: "docs merge b5cf131", href: "https://github.com/transpara-ai/docs/commit/b5cf13121b660304d27e63f9314dde5e8660ea4b" },
+        ],
       },
       {
         id: "g-1-1",
@@ -1113,6 +1121,10 @@
         deps: [],
         href: "deployment-arc.html",
         note: "Packet G-1.1 merged via hive#148 (merge 77a7c392c0b49a32364e578e6aec4da46ea884f9): the gated periodic re-check now reaches keepalive reviewer duties so historical completion events after restart re-enter the review loop.",
+        evidence_links: [
+          { label: "hive#148", href: "https://github.com/transpara-ai/hive/pull/148" },
+          { label: "hive merge 77a7c392", href: "https://github.com/transpara-ai/hive/commit/77a7c392c0b49a32364e578e6aec4da46ea884f9" },
+        ],
       },
       {
         id: "g-1-4",
@@ -1916,6 +1928,10 @@
         deps: ["n4"],
         href: "gate-k.html",
         note: "N5/Gate K closed for pre-live sequencing via docs#138 (merge f8ed4a9dc4612d56959f9f8b5d398c4f58b3655d). The waiver explicitly accepts the missing AC-K evidence and status-poster residual for pre-live work only, and preserves the go-live hard stop: live secrets, customer data, customer-facing launch, production deploy, protected runtime execution, value allocation, and autonomy increases still require future evidence or a production-grade waiver.",
+        evidence_links: [
+          { label: "docs#138", href: "https://github.com/transpara-ai/docs/pull/138" },
+          { label: "docs merge f8ed4a9", href: "https://github.com/transpara-ai/docs/commit/f8ed4a9dc4612d56959f9f8b5d398c4f58b3655d" },
+        ],
       },
       {
         id: "n6",
@@ -2163,7 +2179,7 @@
       endGoal:
         "Reach a steady-state Transpara-AI civilization that can accept new or issue-scanned work, store durable artifacts in the correct repository, open governed PRs, iterate through cross-family adversarial review, surface bulletproof work for human approval, and keep the whole run observable.",
       summary: [
-        { label: "Current gate", value: "Gate K closed for pre-live by docs#138 waiver; go-live revalidation remains a hard boundary", status: "active" },
+        { label: "Current gate", value: "Gate K closed for pre-live by docs#138 waiver; go-live revalidation remains blocked", status: "blocked" },
         { label: "Merge gate", value: "Seven repos protected with cross-family review", status: "done" },
         { label: "Storage posture", value: "Artifacts and PRs stay repo-native", status: "active" },
         { label: "Final mode", value: "Always-on governed factory", status: "planned" },

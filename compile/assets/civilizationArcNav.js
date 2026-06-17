@@ -330,6 +330,27 @@
       panel.appendChild(htmlEl("p", "arc-detail-note", item.note));
     }
 
+    if (Array.isArray(item.evidence_links) && item.evidence_links.length) {
+      var evidence = htmlEl("p", "arc-detail-evidence");
+      evidence.appendChild(htmlEl("span", "arc-detail-meta-key", "evidence "));
+      item.evidence_links.forEach(function (entry, idx) {
+        if (idx) evidence.appendChild(document.createTextNode(" · "));
+        var safe = entry && safeHref(entry.href);
+        if (safe) {
+          var a = htmlEl("a", "arc-detail-evidence-link", entry.label || safe);
+          a.href = safe;
+          if (isExternalHref(safe)) {
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+          }
+          evidence.appendChild(a);
+        } else if (entry && entry.label) {
+          evidence.appendChild(document.createTextNode(entry.label));
+        }
+      });
+      panel.appendChild(evidence);
+    }
+
     var detailSafe = safeHref(item.href);
     if (detailSafe) {
       var link = htmlEl("a", "arc-detail-link", "open article →");
