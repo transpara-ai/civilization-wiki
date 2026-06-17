@@ -113,7 +113,7 @@
     var baked = (data && data.items) || [];
     var generated = (inflight && inflight.generated) || null;
     var live = (inflight && inflight.items) || [];
-    if (!live.length) return { ok: true, items: baked, generated: generated, errors: [] };
+    if (!live.length) return { ok: true, items: baked.slice(), generated: generated, errors: [] };
 
     var now0 = deriveNow(baked);
     var domainEnd = (data && data.domain && typeof data.domain.end === "number") ? data.domain.end : now0 + 1;
@@ -149,7 +149,7 @@
     if (!res.ok || collision) {
       var errs = res.errors.slice();
       if (collision) errs.push("live code collides with a baked item code");
-      return { ok: false, items: baked, generated: generated, errors: errs };
+      return { ok: false, items: baked.slice(), generated: generated, errors: errs };
     }
     return { ok: true, items: combined, generated: generated, errors: [] };
   }
