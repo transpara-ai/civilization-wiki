@@ -173,10 +173,24 @@
     var s = root._arc;
     var tip = s && s.tooltip;
     if (!tip || !item) return;
-    var code = item.code == null ? "" : String(item.code);
-    var label = item.label == null ? "" : String(item.label);
-    var status = item.status == null ? "" : String(item.status);
-    tip.textContent = code + " — " + label + " · " + status;
+    clearNode(tip);
+    var type = item.type == null ? "" : String(item.type);
+    var status = item.blocked ? "blocked" : (item.status == null ? "" : String(item.status));
+    tip.appendChild(htmlEl("div", "arc-tooltip-eyebrow", (type + " · " + status).replace(/^ · | · $/g, "")));
+    tip.appendChild(htmlEl("strong", "", item.label == null ? "" : String(item.label)));
+    if (item.code != null) tip.appendChild(htmlEl("span", "arc-tooltip-code", String(item.code)));
+    var sprintLabel = s.sprintLabelById && s.sprintLabelById[item.sprint];
+    if (sprintLabel) tip.appendChild(htmlEl("div", "arc-tooltip-meta", "sprint · " + sprintLabel));
+    var ord = s.ordinalById && s.ordinalById[item.id];
+    if (ord) tip.appendChild(htmlEl("div", "arc-tooltip-meta", "step " + ord + " of " + s.itemCount));
+    if (item.date) tip.appendChild(htmlEl("div", "arc-tooltip-meta", "date · " + item.date)); // reserved for date-backfill follow-up
+    if (item.provenance) tip.appendChild(htmlEl("div", "arc-tooltip-meta", "provenance · " + item.provenance));
+    if (item.href) {
+      var a = htmlEl("a", "arc-tooltip-link", "open article →");
+      a.href = item.href;
+      if (/^https?:\/\//.test(item.href)) { a.target = "_blank"; a.rel = "noopener"; }
+      tip.appendChild(a);
+    }
     tip.hidden = false;
     positionTooltip(root, tip, event);
   }
@@ -405,6 +419,21 @@
     if (!Layout || !Layout.buildLayout || !Draw) return;
 
     var s = ensureScaffold(root);
+
+    if (!s.ordinalById) {
+      s.ordinalById = {};
+      s.sprintLabelById = {};
+      var sorted = ((data.items) || []).slice().sort(function (a, b) {
+        return (a.seq || 0) - (b.seq || 0);
+      });
+      for (var oi = 0; oi < sorted.length; oi++) {
+        if (sorted[oi].id != null) s.ordinalById[sorted[oi].id] = oi + 1;
+      }
+      s.itemCount = sorted.length;
+      ((data.sprints) || []).forEach(function (sp) {
+        if (sp && sp.id != null) s.sprintLabelById[sp.id] = sp.label;
+      });
+    }
 
     // Reflect state on the root for any CSS hooks.
     root.setAttribute("data-has-selection", s.selectedId != null ? "true" : "false");

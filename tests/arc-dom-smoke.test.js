@@ -125,6 +125,16 @@ test('gate sub-row labels are legible (>=11px) and present for 4 families', () =
   subs.forEach(t => assert.ok(Number(t.getAttribute('font-size')) >= 11));
 });
 
+test('tooltip shows sprint + ordinal step + provenance', () => {
+  const { nav: root, svg } = mountArc();
+  const marker = svg.querySelector('[data-arc-item]');
+  marker.dispatchEvent(new root.ownerDocument.defaultView.MouseEvent('mouseover', { bubbles: true }));
+  const tip = root.querySelector('.arc-tooltip');
+  assert.strictEqual(tip.hidden, false);
+  assert.match(tip.textContent, /step \d+ of 109/);
+  assert.match(tip.textContent, /sprint ·/);
+});
+
 const data = loadArcData();
 assertData(data);
 assertRenderedDom();

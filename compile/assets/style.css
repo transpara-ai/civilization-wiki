@@ -768,6 +768,7 @@ code,pre,.mono{font-family:var(--mono)}
   color:var(--arc-muted);
   font:700 11px/1.25 var(--mono);
 }
+.arc-tooltip-meta{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
 
 .arc-map-bg{fill:rgba(255,255,255,.025);stroke:rgba(122,142,160,.24);stroke-width:1}
 /* Swimlane bands: clean alternating stripes (no hard outline) give the lanes a
