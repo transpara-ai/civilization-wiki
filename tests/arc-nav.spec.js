@@ -72,6 +72,33 @@ test("arc remains inside the mobile viewport", async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(1);
 });
 
+test("narrow viewport: chart scrolls inside frame, not the page", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/index.html");
+
+  const nav = page.locator(".civilization-arc-nav");
+  await expect(nav).toBeVisible();
+  await expect(page.locator("svg.arc-svg")).toBeVisible();
+
+  // The .arc-frame must overflow internally (svg wider than frame).
+  const frameOverflows = await page.locator(".arc-frame").evaluate(function (el) {
+    return el.scrollWidth > el.clientWidth;
+  });
+  expect(frameOverflows).toBeTruthy();
+
+  // The document body must NOT scroll horizontally.
+  const bodyScrollsX = await page.evaluate(function () {
+    return document.body.scrollWidth > window.innerWidth + 1;
+  });
+  expect(bodyScrollsX).toBeFalsy();
+
+  // The SVG must be rendered at content width (well above the 390px viewport).
+  const svgWidth = await page.locator("svg.arc-svg").evaluate(function (el) {
+    return el.getBoundingClientRect().width;
+  });
+  expect(svgWidth).toBeGreaterThan(390);
+});
+
 test('reflows on resize without horizontal page scroll', async ({ page }) => {
   await page.goto('/civilization-arc.html');
   // minContent = plotLeft + (distinctSeqs-1)*minCol + marginRight = 190 + 101*34 + 28 = 3652px.

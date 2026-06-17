@@ -479,7 +479,7 @@
 
     var svg = s.svg;
     svg.setAttribute("viewBox", "0 0 " + layout.contentWidth + " " + layout.contentHeight);
-    svg.style.width = "100%";
+    svg.style.width = layout.contentWidth + "px";
     svg.style.height = layout.contentHeight + "px";
     clearNode(svg);
 
