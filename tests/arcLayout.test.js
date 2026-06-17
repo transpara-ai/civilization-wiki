@@ -40,6 +40,58 @@ test('every gate lands in exactly one family row (none dropped)', () => {
   assert.strictEqual(placed, data.items.filter(i => i.type === 'gate').length);
 });
 
+test('gate rows match the contract groupBy lanes exactly (no hardcoded gaps)', () => {
+  // The layout gate rows must equal exactly what O.groupBy(gates,"gate") returns —
+  // i.e. the layout is contract-driven, not hardcoded to 4 families.
+  const O = require('../compile/assets/civilizationOntology.js');
+  const data = loadData();
+  const gates = data.items.filter((i) => i.type === 'gate');
+  const contractLanes = O.groupBy(gates, 'gate').map((l) => l.lane);
+  const lay = L.buildLayout(data, { width: 1600 });
+  const layoutLanes = lay.tracks.find((t) => t.id === 'gates').rows.map((r) => r.label);
+  assert.deepStrictEqual(layoutLanes, contractLanes,
+    'layout gate lanes must equal O.groupBy(gates,"gate") lanes');
+});
+
+test('unknown-family gate gets its own row and is placed (not dropped)', () => {
+  // Inject a validate-ok gate with an unknown family ("zzz-new").
+  const O = require('../compile/assets/civilizationOntology.js');
+  const data = loadData();
+  // Clone items and inject a new gate with unknown family.
+  const newGate = {
+    id: 'gate-zzz', type: 'gate', status: 'planned', provenance: 'reconstructed',
+    seq: 0.5, sprint: 'origin', repo: ['civilization-wiki'],
+    family: 'zzz-new', code: 'ZZZ', label: 'Test unknown family gate', blocked: false,
+  };
+  const testData = Object.assign({}, data, { items: data.items.concat([newGate]) });
+  const lay = L.buildLayout(testData, { width: 1600 });
+  const gateTrack = lay.tracks.find((t) => t.id === 'gates');
+  const laneLabels = gateTrack.rows.map((r) => r.label);
+  assert.ok(laneLabels.includes('zzz-new'), '"zzz-new" unknown family must get its own row; got: ' + laneLabels.join(' | '));
+  const placed = gateTrack.rows.reduce((n, r) => n + r.items.length, 0);
+  assert.strictEqual(placed, testData.items.filter((i) => i.type === 'gate').length,
+    'every gate (including unknown-family) must be placed');
+});
+
+test('no-family gate falls in (ungated) row and is placed (not dropped)', () => {
+  // Inject a validate-ok gate with no family at all.
+  const data = loadData();
+  const ungatedGate = {
+    id: 'gate-ungated', type: 'gate', status: 'planned', provenance: 'reconstructed',
+    seq: 0.5, sprint: 'origin', repo: ['civilization-wiki'],
+    // no family field
+    code: 'UNG', label: 'Test ungated gate', blocked: false,
+  };
+  const testData = Object.assign({}, data, { items: data.items.concat([ungatedGate]) });
+  const lay = L.buildLayout(testData, { width: 1600 });
+  const gateTrack = lay.tracks.find((t) => t.id === 'gates');
+  const laneLabels = gateTrack.rows.map((r) => r.label);
+  assert.ok(laneLabels.includes('(ungated)'), '"(ungated)" row must appear for no-family gate; got: ' + laneLabels.join(' | '));
+  const placed = gateTrack.rows.reduce((n, r) => n + r.items.length, 0);
+  assert.strictEqual(placed, testData.items.filter((i) => i.type === 'gate').length,
+    'every gate (including no-family) must be placed');
+});
+
 test('nowX === scaleX(deriveNow); frontier is 13.9', () => {
   const lay = L.buildLayout(loadData(), { width: 1600 });
   assert.ok(Math.abs(lay.nowSeq - 13.9) < 1e-9);
@@ -74,6 +126,29 @@ test('narrow width forces horizontal overflow via MIN_COL', () => {
   const data = loadData();
   const lay = L.buildLayout(data, { width: 300 });
   const n = lay.scaleX.distinctCount;
-  assert.ok(lay.contentWidth >= lay.plotLeft + (n - 1) * 14 + L.GEOM.marginRight);
+  assert.ok(lay.contentWidth >= lay.plotLeft + (n - 1) * L.GEOM.minCol + L.GEOM.marginRight);
   assert.ok(lay.contentWidth > 300);
+});
+
+test('worklist chip footprint: adjacent worklist markers differ by at least chip width (>=30, i.e. >=minCol)', () => {
+  // At a deliberately narrow width the worklist row must still space adjacent markers
+  // at least 30px apart (the chip width, per civilizationArcDraw.js w=30).
+  // minCol=34 ≥ 30 guarantees this when the overflow scale is in effect.
+  const data = loadData();
+  const lay = L.buildLayout(data, { width: 300 });
+  // Find the worklist track row.
+  const worklist = lay.tracks.find((t) => t.id === 'worklist');
+  assert.ok(worklist, 'worklist track must exist');
+  const workRow = worklist.rows[0];
+  assert.ok(workRow, 'worklist row[0] must exist');
+  const xs = workRow.items.map((p) => p.x);
+  // Adjacent placed markers must be at least minCol apart (≥30 for chip coverage).
+  for (let i = 1; i < xs.length; i++) {
+    assert.ok(
+      xs[i] - xs[i - 1] >= 30,
+      'adjacent worklist markers too close: ' + (xs[i] - xs[i - 1]).toFixed(2) + 'px (need >=30 for chip footprint)'
+    );
+  }
+  // Sanity: minCol itself must be >=30.
+  assert.ok(L.GEOM.minCol >= 30, 'GEOM.minCol must be >= 30 to cover chip footprint');
 });

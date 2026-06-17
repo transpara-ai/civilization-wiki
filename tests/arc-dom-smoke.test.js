@@ -136,64 +136,65 @@ test('tooltip shows sprint + ordinal step + provenance', () => {
 });
 
 // ── XSS hardening: javascript: hrefs must never be assigned to a rendered link ──
-test('javascript: href is never assigned to any rendered link (XSS hardening)', () => {
-  // Mount fresh DOM but patch the data before DOMContentLoaded fires.
+// Helper: mount a fresh JSDOM, inject custom hrefs onto items, fire DOMContentLoaded, return nav.
+function mountWithInjectedHrefs(hrefMap) {
   const dom = new JSDOM('<!doctype html><div data-civilization-arc-nav></div>', {
     pretendToBeVisual: true, runScripts: "outside-only", url: "http://127.0.0.1:8787/index.html",
   });
-  // Eval all modules except the controller so we can poison data first.
   ["civilizationOntology.js", "civilizationArcData.js", "civilizationArcLayout.js",
    "civilizationArcDraw.js"].forEach((f) =>
     dom.window.eval(fs.readFileSync(path.join(root, "compile/assets", f), "utf8")));
-
-  // Inject a malicious href on the first item and a safe http href on the second.
   const items = dom.window.CIVILIZATION_ARC_DATA.items;
-  const maliciousItem = items[0];
-  const safeItem = items[1];
-  maliciousItem.href = "javascript:alert(1)";
-  safeItem.href = "https://example.com/safe";
-
-  // Now eval the controller — DOMContentLoaded will fire synchronously in jsdom
-  // after the next dispatchEvent call.
+  Object.keys(hrefMap).forEach((k) => { items[Number(k)].href = hrefMap[k]; });
   dom.window.eval(fs.readFileSync(path.join(root, "compile/assets/civilizationArcNav.js"), "utf8"));
   dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
-
   const nav = dom.window.document.querySelector(".civilization-arc-nav");
+  return { nav, items, dom };
+}
+
+function triggerItem(nav, item, dom) {
+  const id = String(item.id);
+  const marker = nav.querySelector('[data-arc-item="' + id + '"]');
+  if (marker) {
+    marker.dispatchEvent(new dom.window.MouseEvent('mouseover', { bubbles: true }));
+    marker.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  }
+  return marker;
+}
+
+test('javascript: href is never assigned to any rendered link (XSS hardening)', () => {
+  // Test three malicious hrefs and two safe hrefs across different items.
+  const { nav, items, dom } = mountWithInjectedHrefs({
+    0: "javascript:alert(1)",           // MUST be rejected
+    1: "//evil.example/x",              // protocol-relative — MUST be rejected
+    2: "data:text/html,<script>xss</script>",  // data: — MUST be rejected
+    3: "https://example.com/safe",      // MUST render as link
+    4: "the-civilization.html",         // bare relative (real data format) — MUST render as link
+  });
   assert(nav, "nav did not mount");
 
-  // Simulate a click on the malicious item's marker to open the detail panel.
-  const maliciousId = String(maliciousItem.id);
-  const maliciousMarker = nav.querySelector('[data-arc-item="' + maliciousId + '"]');
-  if (maliciousMarker) {
-    maliciousMarker.dispatchEvent(new dom.window.MouseEvent('mouseover', { bubbles: true }));
-    maliciousMarker.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
-  }
+  // Trigger malicious items: hover + click each so both tooltip and detail panel are exercised.
+  [0, 1, 2].forEach((idx) => triggerItem(nav, items[idx], dom));
 
-  // Simulate hovering the safe item to trigger the tooltip link.
-  const safeId = String(safeItem.id);
-  const safeMarker = nav.querySelector('[data-arc-item="' + safeId + '"]');
-  if (safeMarker) {
-    safeMarker.dispatchEvent(new dom.window.MouseEvent('mouseover', { bubbles: true }));
-  }
-
-  // Assert: no <a> anywhere in the nav has a javascript: href.
-  const allLinks = [...nav.querySelectorAll("a")];
-  const xssLinks = allLinks.filter((a) => /^javascript:/i.test(a.getAttribute("href") || ""));
+  // Assert: no <a> in the nav has any dangerous href (malicious items active in detail panel).
+  const dangLinks = [...nav.querySelectorAll("a")].filter((a) => {
+    const h = (a.getAttribute("href") || "");
+    return /^javascript:/i.test(h) || /^[\\/]{2}/.test(h) || /^data:/i.test(h);
+  });
   assert.strictEqual(
-    xssLinks.length,
-    0,
-    `Found ${xssLinks.length} link(s) with javascript: href: ${xssLinks.map((a) => a.getAttribute("href")).join(", ")}`
+    dangLinks.length, 0,
+    "Dangerous links found: " + dangLinks.map((a) => a.getAttribute("href")).join(", ")
   );
 
-  // Assert happy path: the safe http item still renders its link (in tooltip or detail panel).
-  // Click the safe marker to ensure the detail panel link is rendered.
-  if (safeMarker) {
-    safeMarker.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
-  }
-  const safeLinks = [...nav.querySelectorAll("a")].filter(
-    (a) => (a.getAttribute("href") || "").startsWith("https://example.com/safe")
-  );
-  assert.ok(safeLinks.length >= 1, "Safe http href should still render a link");
+  // Assert happy path: safe https link renders (click item 3 to load it in detail panel).
+  triggerItem(nav, items[3], dom);
+  const safeLinks = [...nav.querySelectorAll("a")].filter((a) => (a.getAttribute("href") || "").startsWith("https://example.com/safe"));
+  assert.ok(safeLinks.length >= 1, "Safe https href should render a link");
+
+  // Assert happy path: bare relative (the-civilization.html) renders as a link — must NOT vanish.
+  triggerItem(nav, items[4], dom);
+  const relLinks = [...nav.querySelectorAll("a")].filter((a) => (a.getAttribute("href") || "") === "the-civilization.html");
+  assert.ok(relLinks.length >= 1, "Bare relative href 'the-civilization.html' must render a link (safeHref must not reject it)");
 });
 
 const data = loadArcData();

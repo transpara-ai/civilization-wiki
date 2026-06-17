@@ -11,7 +11,7 @@
     "Release & security gates (v3.9)",
   ];
 
-  var GEOM = { gutter: 190, marginRight: 28, rowH: 30, trackPad: 8, trackGap: 10, top: 64, axisH: 34, minCol: 14 };
+  var GEOM = { gutter: 190, marginRight: 28, rowH: 30, trackPad: 8, trackGap: 10, top: 64, axisH: 34, minCol: 34 };
 
   // Ordinal rank scale: distinct seq values are placed at equidistant columns
   // (NOT proportional to seq magnitude). Items sharing a seq share a column.
@@ -83,10 +83,13 @@
     var gates = items.filter(function (i) { return i.type === "gate"; });
     var work = items.filter(function (i) { return i.type === "work" && i.provenance === "derived"; });
 
+    // Build gate rows from the ontology contract (groupBy "gate" = by family),
+    // so every contract-valid gate lands in exactly one row — no hardcoded family list.
+    var gateLanes = O.groupBy(gates, "gate");
     var defs = [
       { id: "construction", label: "construction arc", rows: [{ id: "beats", label: "", items: beats.concat(decisions, goal) }] },
-      { id: "gates", label: "gates", rows: GATE_FAMILIES.map(function (f) {
-          return { id: "gate:" + f, label: f, items: gates.filter(function (g) { return (g.family || null) === f; }) };
+      { id: "gates", label: "gates", rows: gateLanes.map(function (lane) {
+          return { id: "gate:" + lane.lane, label: lane.lane, items: lane.items };
         }) },
       { id: "worklist", label: "worklist", rows: [{ id: "work", label: "", items: work }] },
     ];

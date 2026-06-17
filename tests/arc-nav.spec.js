@@ -74,11 +74,12 @@ test("arc remains inside the mobile viewport", async ({ page }) => {
 
 test('reflows on resize without horizontal page scroll', async ({ page }) => {
   await page.goto('/civilization-arc.html');
-  // Use a viewport wider than minContent (1632px) so the SVG width is frame-driven at the wide size.
-  await page.setViewportSize({ width: 1800, height: 900 });
+  // minContent = plotLeft + (distinctSeqs-1)*minCol + marginRight = 190 + 101*34 + 28 = 3652px.
+  // Use a viewport wider than minContent so the SVG viewBox width is frame-driven (not overflow-driven).
+  await page.setViewportSize({ width: 4000, height: 900 });
   await page.waitForTimeout(60); // let initial render settle
   const wide = await page.locator('.arc-svg').getAttribute('viewBox');
-  await page.setViewportSize({ width: 760, height: 900 });
+  await page.setViewportSize({ width: 3000, height: 900 });
   await page.waitForTimeout(120); // allow rAF reflow
   const narrow = await page.locator('.arc-svg').getAttribute('viewBox');
   expect(narrow).not.toBe(wide); // viewBox width recomputed for the new container

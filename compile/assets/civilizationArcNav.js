@@ -45,13 +45,25 @@
 
   // ---- href safety helpers --------------------------------------------------
 
-  // Only http(s), root-relative, or anchor hrefs are safe to assign to a link;
-  // reject javascript:/data:/etc. (defense-in-depth even for authored data).
+  // Fail-closed allowlist: permits http(s), anchors, root-relative (single /),
+  // and bare relative paths (e.g. the-civilization.html) that carry no scheme.
+  // Rejects: any scheme: URI (javascript:/data:/vbscript:/mailto:/…),
+  //          protocol-relative (// or \\), control/whitespace chars, empty/non-string.
   function safeHref(href) {
-    if (typeof href !== "string") return null;
+    if (typeof href !== "string" || href === "") return null;
+    // Reject control chars or whitespace (including encoded newlines in href)
+    if (/[\x00-\x20\x7f]/.test(href)) return null;
+    // Reject protocol-relative // or \\ at the start
+    if (/^[\\/]{2}/.test(href)) return null;
+    // Allow absolute http(s)
     if (/^https?:\/\//i.test(href)) return href;
-    if (href.charAt(0) === "/" || href.charAt(0) === "#") return href;
-    return null;
+    // Allow anchor or root-relative (but NOT //)
+    if (href.charAt(0) === "#" || href.charAt(0) === "/") return href;
+    // Allow bare relative paths that have no scheme (colon before first / # ?)
+    var sep = href.search(/[/#?]/);
+    var colon = href.indexOf(":");
+    if (colon !== -1 && (sep === -1 || colon < sep)) return null;
+    return href;
   }
   function isExternalHref(href) { return /^https?:\/\//i.test(href); }
 
@@ -197,13 +209,8 @@
     if (ord) tip.appendChild(htmlEl("div", "arc-tooltip-meta", "step " + ord + " of " + s.itemCount));
     if (item.date) tip.appendChild(htmlEl("div", "arc-tooltip-meta", "date · " + item.date)); // reserved for date-backfill follow-up
     if (item.provenance) tip.appendChild(htmlEl("div", "arc-tooltip-meta", "provenance · " + item.provenance));
-    var tipSafe = safeHref(item.href);
-    if (tipSafe) {
-      var a = htmlEl("a", "arc-tooltip-link", "open article →");
-      a.href = tipSafe;
-      if (isExternalHref(tipSafe)) { a.target = "_blank"; a.rel = "noopener noreferrer"; }
-      tip.appendChild(a);
-    }
+    // No clickable link in the tooltip — pointer-events:none on .arc-tooltip makes
+    // anchors unclickable and confusing. The detail panel (on click) shows the link.
     tip.hidden = false;
     positionTooltip(root, tip, event);
   }
