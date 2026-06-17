@@ -65,7 +65,7 @@ The v3.9 documents are:
 - `implementation/as-built-stage-tracker-v3.9.md` — current-state record.
 - `implementation/state-of-the-system-proof-v3.9.md` — state proof.
 
-The archive/v2 re-anchor is `ADR-0007-civilization-hive-governance.md`, the Civilization definition that must become standalone v4.0 content. The source packet no longer treats that ADR as a ninth v3.9 document. That clarifies the count; it is not Gate L progress, does not start reconciliation, and does not satisfy AC-L1 or AC-L4.
+The archive/v2 re-anchor is `ADR-0007`, the Civilization definition that must become standalone v4.0 content. The source packet no longer treats that ADR as a ninth v3.9 document. That clarifies the count; it is not Gate L progress, does not start reconciliation, and does not satisfy AC-L1 or AC-L4.
 
 ## Lettering note
 
