@@ -22,6 +22,8 @@ STATUS = ROOT / "compile" / "refresh-status.json"
 INDEX = ROOT / "index.md"
 CSS_VER = ""
 ARC_DATA_VER = ""
+ARC_LAYOUT_VER = ""
+ARC_DRAW_VER = ""
 ARC_NAV_VER = ""
 ONTO_VER = ""
 
@@ -229,8 +231,10 @@ def page(slug, title, meta, fm, body_html, toc_tokens, links, status, *, is_home
         arc_scripts = (
             '<script defer src="civilizationOntology.js?v=%s"></script>'
             '<script defer src="civilizationArcData.js?v=%s"></script>'
+            '<script defer src="civilizationArcLayout.js?v=%s"></script>'
+            '<script defer src="civilizationArcDraw.js?v=%s"></script>'
             '<script defer src="civilizationArcNav.js?v=%s"></script>'
-            % (ONTO_VER, ARC_DATA_VER, ARC_NAV_VER)
+            % (ONTO_VER, ARC_DATA_VER, ARC_LAYOUT_VER, ARC_DRAW_VER, ARC_NAV_VER)
         )
         arc_mount = '<div data-civilization-arc-nav></div>'
     tagline = "" if is_home else '<div class="tagline">%s%s</div>' % (
@@ -270,8 +274,10 @@ def arc_page(status):
         '<link rel="stylesheet" href="style.css?v=%s">' % CSS_VER +
         '<script defer src="civilizationOntology.js?v=%s"></script>'
         '<script defer src="civilizationArcData.js?v=%s"></script>'
+        '<script defer src="civilizationArcLayout.js?v=%s"></script>'
+        '<script defer src="civilizationArcDraw.js?v=%s"></script>'
         '<script defer src="civilizationArcNav.js?v=%s"></script>'
-        % (ONTO_VER, ARC_DATA_VER, ARC_NAV_VER) +
+        % (ONTO_VER, ARC_DATA_VER, ARC_LAYOUT_VER, ARC_DRAW_VER, ARC_NAV_VER) +
         '<script>(function(){try{if(localStorage.getItem("civwiki-theme")==="light")'
         'document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>'
         '</head><body class="arc-full-page">'
@@ -282,7 +288,7 @@ def arc_page(status):
 
 
 def build():
-    global CSS_VER, ARC_DATA_VER, ARC_NAV_VER, ONTO_VER
+    global CSS_VER, ARC_DATA_VER, ARC_LAYOUT_VER, ARC_DRAW_VER, ARC_NAV_VER, ONTO_VER
     DIST.mkdir(exist_ok=True)
     status = load_status()
 
@@ -294,6 +300,8 @@ def build():
     CSS_VER = copy_asset("style.css")
     ONTO_VER = copy_asset("civilizationOntology.js")
     ARC_DATA_VER = copy_asset("civilizationArcData.js")
+    ARC_LAYOUT_VER = copy_asset("civilizationArcLayout.js")
+    ARC_DRAW_VER = copy_asset("civilizationArcDraw.js")
     ARC_NAV_VER = copy_asset("civilizationArcNav.js")
     count = 0
     for p in sorted(WIKI.glob("*.md")):
