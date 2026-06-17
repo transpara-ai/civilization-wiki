@@ -154,7 +154,7 @@ test('tooltip shows sprint + ordinal step + provenance', () => {
 
 // ── XSS hardening: javascript: hrefs must never be assigned to a rendered link ──
 // Helper: mount a fresh JSDOM, inject custom hrefs onto items, fire DOMContentLoaded, return nav.
-function mountWithInjectedHrefs(hrefMap) {
+function mountWithInjectedHrefs(hrefMap, evidenceMap = {}) {
   const dom = new JSDOM('<!doctype html><div data-civilization-arc-nav></div>', {
     pretendToBeVisual: true, runScripts: "outside-only", url: "http://127.0.0.1:8787/index.html",
   });
@@ -163,6 +163,7 @@ function mountWithInjectedHrefs(hrefMap) {
     dom.window.eval(fs.readFileSync(path.join(root, "compile/assets", f), "utf8")));
   const items = dom.window.CIVILIZATION_ARC_DATA.items;
   Object.keys(hrefMap).forEach((k) => { items[Number(k)].href = hrefMap[k]; });
+  Object.keys(evidenceMap).forEach((k) => { items[Number(k)].evidence_links = evidenceMap[k]; });
   dom.window.eval(fs.readFileSync(path.join(root, "compile/assets/civilizationArcNav.js"), "utf8"));
   dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
   const nav = dom.window.document.querySelector(".civilization-arc-nav");
@@ -187,11 +188,18 @@ test('javascript: href is never assigned to any rendered link (XSS hardening)', 
     2: "data:text/html,<script>xss</script>",  // data: — MUST be rejected
     3: "https://example.com/safe",      // MUST render as link
     4: "the-civilization.html",         // bare relative (real data format) — MUST render as link
+  }, {
+    5: [
+      { label: "bad evidence javascript", href: "javascript:alert(1)" },
+      { label: "bad evidence data", href: "data:text/html,<script>xss</script>" },
+      { label: "safe evidence", href: "https://example.com/evidence" },
+    ],
   });
   assert(nav, "nav did not mount");
 
   // Trigger malicious items: hover + click each so both tooltip and detail panel are exercised.
   [0, 1, 2].forEach((idx) => triggerItem(nav, items[idx], dom));
+  triggerItem(nav, items[5], dom);
 
   // Assert: no <a> in the nav has any dangerous href (malicious items active in detail panel).
   const dangLinks = [...nav.querySelectorAll("a")].filter((a) => {
@@ -202,6 +210,10 @@ test('javascript: href is never assigned to any rendered link (XSS hardening)', 
     dangLinks.length, 0,
     "Dangerous links found: " + dangLinks.map((a) => a.getAttribute("href")).join(", ")
   );
+
+  const safeEvidenceLinks = [...nav.querySelectorAll(".arc-detail-evidence-link")]
+    .map((a) => a.getAttribute("href"));
+  assert.deepStrictEqual(safeEvidenceLinks, ["https://example.com/evidence"]);
 
   // Assert happy path: safe https link renders (click item 3 to load it in detail panel).
   triggerItem(nav, items[3], dom);
