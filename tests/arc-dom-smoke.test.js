@@ -197,6 +197,24 @@ test('javascript: href is never assigned to any rendered link (XSS hardening)', 
   assert.ok(relLinks.length >= 1, "Bare relative href 'the-civilization.html' must render a link (safeHref must not reject it)");
 });
 
+// --- grouping toolbar (Task 5) ---
+test('grouping toolbar: six group buttons render, Tracks active by default', () => {
+  const { nav } = mountArc();
+  const btns = [...nav.querySelectorAll('[data-arc-group]')];
+  assert.deepStrictEqual(btns.map(b => b.getAttribute('data-arc-group')),
+    ['tracks', 'status', 'repo', 'sprint', 'gate', 'actor']);
+  assert.strictEqual(nav.querySelector('.arc-group-btn-active').getAttribute('data-arc-group'), 'tracks');
+  assert.strictEqual(nav.querySelectorAll('.arc-track-band').length, 3); // default unchanged
+});
+
+test('clicking "Status" regroups the lanes and marks the button active', () => {
+  const { nav, dom } = mountArc();
+  nav.querySelector('[data-arc-group="status"]').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  const labels = [...nav.querySelectorAll('.arc-track-label')].map(t => t.textContent);
+  assert.ok(labels.includes('done') && labels.includes('planned'), 'status lanes present; got ' + labels.join(' | '));
+  assert.strictEqual(nav.querySelector('.arc-group-btn-active').getAttribute('data-arc-group'), 'status');
+});
+
 const data = loadArcData();
 assertData(data);
 assertRenderedDom();

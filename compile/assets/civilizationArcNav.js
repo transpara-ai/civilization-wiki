@@ -21,6 +21,17 @@
   // returns 0 → we fall back to this so tests/SSR-style renders are stable.
   var BASE_WIDTH = 1680;
 
+  // Grouping dimensions for the toolbar. "tracks" is the default type-track view;
+  // the others decompose lanes via CivOntology.groupBy, sharing the chronological axis.
+  var GROUPINGS = [
+    { id: "tracks", label: "Tracks" },
+    { id: "status", label: "Status" },
+    { id: "repo", label: "Repo" },
+    { id: "sprint", label: "Sprint" },
+    { id: "gate", label: "Gate" },
+    { id: "actor", label: "Actor" },
+  ];
+
   // ---- small DOM helpers ----------------------------------------------------
 
   function htmlEl(name, className, text) {
@@ -141,9 +152,9 @@
   // ---- scaffold (built once per root, idempotent) ---------------------------
 
   function ensureScaffold(root) {
-    root._arc = root._arc || { collapsed: {}, selectedId: null };
+    root._arc = root._arc || { collapsed: {}, selectedId: null, groupBy: "tracks" };
     var s = root._arc;
-    if (s.scaffolded && s.frame && s.svg && s.nowPanel && s.detailPanel && s.tooltip) {
+    if (s.scaffolded && s.frame && s.svg && s.nowPanel && s.detailPanel && s.tooltip && s.toolbar) {
       return s;
     }
 
@@ -178,9 +189,20 @@
     var detailPanel = htmlEl("div", "arc-detail-panel");
     panels.append(nowPanel, detailPanel);
 
-    root.append(frame, panels);
+    var toolbar = htmlEl("div", "arc-toolbar");
+    toolbar.setAttribute("role", "group");
+    toolbar.setAttribute("aria-label", "Group the arc by");
+    GROUPINGS.forEach(function (g) {
+      var btn = htmlEl("button", "arc-group-btn", g.label);
+      btn.setAttribute("type", "button");
+      btn.setAttribute("data-arc-group", g.id);
+      toolbar.appendChild(btn);
+    });
+
+    root.append(toolbar, frame, panels);
 
     s.scaffolded = true;
+    s.toolbar = toolbar;
     s.frame = frame;
     s.svg = svg;
     s.tooltip = tooltip;
@@ -189,6 +211,18 @@
     s.detailPanel = detailPanel;
     s.standalone = standalone;
     return s;
+  }
+
+  // Reflect the active grouping on the toolbar buttons.
+  function updateToolbar(s) {
+    if (!s || !s.toolbar) return;
+    var cur = s.groupBy || "tracks";
+    var btns = s.toolbar.querySelectorAll("[data-arc-group]");
+    Array.prototype.forEach.call(btns, function (b) {
+      var on = b.getAttribute("data-arc-group") === cur;
+      b.classList.toggle("arc-group-btn-active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
   }
 
   // ---- tooltip --------------------------------------------------------------
@@ -357,13 +391,12 @@
     var s = root._arc;
     if (s.wired) return;
     var svg = s.svg;
-    var byId = indexItems(data);
 
     function itemFromEvent(event) {
       var node = closestArcItem(event.target);
       if (!node) return null;
       var id = node.getAttribute("data-arc-item");
-      return id != null ? byId[id] : null;
+      return id != null ? s.byId[id] : null;
     }
 
     svg.addEventListener("mouseover", function (event) {
@@ -392,20 +425,20 @@
         var trackId = collapse.getAttribute("data-arc-collapse");
         if (trackId != null) {
           s.collapsed[trackId] = !s.collapsed[trackId];
-          render(root, data);
+          render(root, s.data);
         }
         return;
       }
       var node = closestArcItem(event.target);
       if (node) {
         s.selectedId = node.getAttribute("data-arc-item");
-        render(root, data);
+        render(root, s.data);
         return;
       }
       // Background click clears the selection.
       if (s.selectedId != null) {
         s.selectedId = null;
-        render(root, data);
+        render(root, s.data);
       }
     });
 
@@ -420,13 +453,25 @@
         var trackId = collapse.getAttribute("data-arc-collapse");
         if (trackId != null) {
           s.collapsed[trackId] = !s.collapsed[trackId];
-          render(root, data);
+          render(root, s.data);
         }
         return;
       }
       s.selectedId = node.getAttribute("data-arc-item");
-      render(root, data);
+      render(root, s.data);
     });
+
+    // Grouping toolbar: switch the lane decomposition; re-render with current data.
+    if (s.toolbar) {
+      s.toolbar.addEventListener("click", function (event) {
+        var btn = (event.target && event.target.closest) ? event.target.closest("[data-arc-group]") : null;
+        if (!btn) return;
+        var dim = btn.getAttribute("data-arc-group") || "tracks";
+        if (dim === (s.groupBy || "tracks")) return;
+        s.groupBy = dim;
+        render(root, s.data);
+      });
+    }
 
     s.wired = true;
   }
@@ -440,6 +485,8 @@
     if (!Layout || !Layout.buildLayout || !Draw) return;
 
     var s = ensureScaffold(root);
+    s.data = data;                 // current data (baked, or merged-with-live overlay)
+    s.byId = indexItems(data);     // re-index each render so live markers stay interactive
 
     if (!s.ordinalById) {
       s.ordinalById = {};
@@ -465,7 +512,7 @@
         if (s.raf && typeof cancelAnimationFrame !== "undefined") cancelAnimationFrame(s.raf);
         var schedule = (typeof requestAnimationFrame !== "undefined")
           ? requestAnimationFrame : function (fn) { return setTimeout(fn, 16); };
-        s.raf = schedule(function () { render(root, data); });
+        s.raf = schedule(function () { render(root, s.data); });
       });
       s.resizeObserver.observe(s.frame); // observe the FRAME (container), not the svg, to avoid feedback
     }
@@ -475,7 +522,7 @@
 
     var width = Math.round(s.frame.getBoundingClientRect().width) || BASE_WIDTH;
 
-    var layout = Layout.buildLayout(data, { width: width, collapsed: s.collapsed });
+    var layout = Layout.buildLayout(data, { width: width, collapsed: s.collapsed, groupBy: s.groupBy || "tracks" });
 
     var svg = s.svg;
     svg.setAttribute("viewBox", "0 0 " + layout.contentWidth + " " + layout.contentHeight);
@@ -500,6 +547,7 @@
       }
     }
 
+    updateToolbar(s);
     renderNowPanel(root, data);
     renderDetailPanel(root, data);
 
