@@ -5,6 +5,7 @@ const assert = require("assert");
 const { JSDOM } = require("jsdom");
 
 const root = path.resolve(__dirname, "..");
+const O = require("../compile/assets/civilizationOntology.js");
 
 function loadArcData() {
   const context = { window: {} };
@@ -16,127 +17,191 @@ function loadArcData() {
   return context.window.CIVILIZATION_ARC_DATA;
 }
 
-function assertData(data) {
-  for (const key of [
-    "phases",
-    "markers",
-    "dependencies",
-    "gates",
-    "risks",
-    "decisions",
-    "criticalPath",
-    "legendItems",
-    "swimlanes",
-    "summaryRail",
-  ]) {
-    assert(Array.isArray(data[key]) && data[key].length > 0, `${key} missing or empty`);
-  }
-
-  assert.strictEqual(data.phases.length, 15, "expected 15 major phases");
-  assert(data.executionPlan, "execution plan missing");
-  assert(/^\d{4}-\d{2}-\d{2}$/.test(data.executionPlan.updated), "execution plan date must be ISO");
-  assert(data.executionPlan.endGoal.includes("steady-state Transpara-AI civilization"));
-  assert(
-    Array.isArray(data.executionPlan.summary) && data.executionPlan.summary.length >= 4,
-    "execution plan summary missing or too small"
-  );
-  assert(
-    Array.isArray(data.executionPlan.nearTerm) && data.executionPlan.nearTerm.length >= 6,
-    "near-term execution plan missing or too small"
-  );
-  assert(
-    Array.isArray(data.executionPlan.complete) && data.executionPlan.complete.length >= 10,
-    "complete execution plan missing or too small"
-  );
-  assert.strictEqual(data.executionPlan.nearTerm[0].order, "N1");
-  assert.strictEqual(data.executionPlan.complete[0].order, "C1");
-
-  const currentX = data.currentFocus && data.currentFocus.x;
-  const stalePastStatuses = new Set(["conceptual", "designed", "unresolved", "future"]);
-  const stalePastPhases = data.phases.filter(
-    (phase) => phase.end <= currentX && stalePastStatuses.has(phase.status)
-  );
-  assert.strictEqual(
-    stalePastPhases.length,
-    0,
-    `past phases cannot remain conceptual/designed/unresolved/future: ${stalePastPhases
-      .map((phase) => `${phase.id}:${phase.status}`)
-      .join(", ")}`
-  );
-
-  const phaseStatusById = new Map(data.phases.map((phase) => [phase.id, phase.status]));
-  assert.strictEqual(phaseStatusById.get("primitive-basis"), "canonical");
-  assert.strictEqual(phaseStatusById.get("civic-philosophy"), "canonical");
-  assert.strictEqual(phaseStatusById.get("memory-context"), "canonical");
-  assert.strictEqual(phaseStatusById.get("prompt-rituals"), "active");
-  assert.strictEqual(phaseStatusById.get("deployment"), "planned");
-
-  const markers = new Set(data.markers.map((marker) => marker.id));
-  for (const markerId of data.criticalPath) {
-    assert(markers.has(markerId), `critical path references missing marker ${markerId}`);
-  }
-  for (const dependency of data.dependencies) {
-    assert(markers.has(dependency.from), `dependency references missing source ${dependency.from}`);
-    assert(markers.has(dependency.to), `dependency references missing target ${dependency.to}`);
-  }
-  for (const markerId of data.summaryRail) {
-    assert(markers.has(markerId), `summary rail references missing marker ${markerId}`);
-  }
-
-  const hrefs = new Set();
-  for (const collection of [
-    data.phases,
-    data.markers,
-    data.gates,
-    data.risks,
-    data.decisions,
-    [data.currentFocus],
-  ]) {
-    for (const item of collection) {
-      if (item && item.href) hrefs.add(item.href);
-    }
-  }
-
-  for (const href of hrefs) {
-    assert(fs.existsSync(path.join(root, "dist", href)), `linked page missing from dist: ${href}`);
-  }
+// ── Reusable mount helper — eval all five modules into a JSDOM window and
+//    dispatch DOMContentLoaded. Returns { nav, svg, dom } for test assertions.
+function mountArc() {
+  const dom = new JSDOM('<!doctype html><div data-civilization-arc-nav></div>', {
+    pretendToBeVisual: true, runScripts: "outside-only", url: "http://127.0.0.1:8787/index.html",
+  });
+  ["civilizationOntology.js", "civilizationArcData.js", "civilizationArcLayout.js",
+   "civilizationArcDraw.js", "civilizationArcNav.js"].forEach((f) =>
+    dom.window.eval(fs.readFileSync(path.join(root, "compile/assets", f), "utf8")));
+  dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
+  const nav = dom.window.document.querySelector(".civilization-arc-nav");
+  const svg = nav ? nav.querySelector("svg.arc-svg") : null;
+  return { nav, svg, dom };
 }
 
-function assertRenderedDom() {
-  const dom = new JSDOM('<!doctype html><div data-civilization-arc-nav></div>', {
-    pretendToBeVisual: true,
-    runScripts: "outside-only",
-    url: "http://127.0.0.1:8787/index.html",
+// ── Data contract: items[] exists and passes the ontology allowlist gate ──
+function assertData(data) {
+  assert(data, "CIVILIZATION_ARC_DATA missing");
+  assert(Array.isArray(data.items), "data.items must be an array");
+  assert(data.items.length > 0, "data.items must not be empty");
+
+  // Fail-closed allowlist gate — every item must validate.
+  const r = O.validateItems(data.items);
+  assert.strictEqual(r.ok, true, `validateItems failed:\n${(r.errors || []).join("\n")}`);
+
+  // ── Code facet: every item carries a non-empty string short code ──
+  // The default (clean) chart view renders item.code as the node text, so a
+  // missing/empty code would leave a node unreadable.
+  data.items.forEach((it) => {
+    assert.strictEqual(
+      typeof it.code,
+      "string",
+      `item '${it.id}' code must be a string, got ${typeof it.code}`
+    );
+    assert(it.code.trim().length > 0, `item '${it.id}' code must be non-empty`);
   });
 
-  dom.window.eval(fs.readFileSync(path.join(root, "compile/assets/civilizationArcData.js"), "utf8"));
+  // ── Code uniqueness: codes label nodes and the code key, so they must be unique ──
+  const codeCounts = new Map();
+  data.items.forEach((it) => {
+    codeCounts.set(it.code, (codeCounts.get(it.code) || 0) + 1);
+  });
+  const dupedCodes = Array.from(codeCounts.entries())
+    .filter(([, n]) => n > 1)
+    .map(([c]) => c);
+  assert.strictEqual(
+    dupedCodes.length,
+    0,
+    `every item.code must be unique; duplicates: ${dupedCodes.join(", ")}`
+  );
+
+  // ── Gate grouping lanes by family: the "family lanes, all gates" model ──
+  // grouping="gate" lanes by item.family; the expanded gate landscape must
+  // surface the three load-bearing gate families (ordered by GATE_FAMILIES).
+  const gateLanes = O.groupBy(data.items, "gate").map((l) => l.lane);
+  ["v3.9 milestones (A-J)", "Deployment register (G-0..G-8.4)", "v4.0 (K/L)"].forEach(
+    (fam) => {
+      assert(
+        gateLanes.includes(fam),
+        `grouping="gate" must include the '${fam}' lane; saw: ${gateLanes.join(" | ")}`
+      );
+    }
+  );
+  // GATE_FAMILIES ordering: the v3.9-milestones lane precedes the v4.0 lane.
+  assert(
+    gateLanes.indexOf("v3.9 milestones (A-J)") < gateLanes.indexOf("v4.0 (K/L)"),
+    `gate lanes should follow GATE_FAMILIES order; saw: ${gateLanes.join(" | ")}`
+  );
+
+  // Derived "now" must be a finite, positive frontier.
+  const now = O.deriveNow(data.items);
+  assert(Number.isFinite(now), `deriveNow must be finite, got ${now}`);
+  assert(now > 0, `deriveNow must be > 0, got ${now}`);
+
+  // executionPlan is still present and consumed by the plan board.
+  assert(data.executionPlan, "execution plan missing");
+  assert(/^\d{4}-\d{2}-\d{2}$/.test(data.executionPlan.updated), "execution plan date must be ISO");
+}
+
+// ── Rendered DOM: the new chart structure exists ──
+function assertRenderedDom() {
+  const { nav, svg } = mountArc();
+  assert(nav, "arc nav did not mount");
+  assert(svg, "SVG not rendered");
+  assert.strictEqual(nav.querySelectorAll(".arc-track-band").length, 3, "expected 3 track bands");
+  assert.strictEqual(nav.querySelectorAll(".arc-track-label").length, 3, "expected 3 track labels");
+  assert(nav.querySelectorAll(".arc-subrow-label").length >= 4, "expected >=4 gate-family sub-row labels");
+  assert(nav.querySelectorAll(".arc-item-group").length > 0, "no item node groups produced");
+  assert(nav.querySelectorAll(".arc-marker").length > 0, "no item shapes produced");
+  assert(nav.querySelector(".arc-now-line"), "now-line element missing");
+}
+
+const { test } = require("node:test");
+
+test('axis renders 15 sprint start-ticks and no era labels', () => {
+  const { svg } = mountArc();
+  assert.strictEqual(svg.querySelectorAll('.arc-sprint-tick-label').length, 15);
+  assert.strictEqual(svg.querySelectorAll('.arc-era-label').length, 0);
+  assert.ok(svg.querySelector('.arc-now-line')); // now-line preserved
+});
+
+test('gate sub-row labels are legible (>=11px) and present for 4 families', () => {
+  const { svg } = mountArc();
+  const subs = [...svg.querySelectorAll('.arc-subrow-label')];
+  assert.ok(subs.length >= 4);
+  subs.forEach(t => assert.ok(Number(t.getAttribute('font-size')) >= 11));
+});
+
+test('tooltip shows sprint + ordinal step + provenance', () => {
+  const { nav: root, svg } = mountArc();
+  const marker = svg.querySelector('[data-arc-item]');
+  marker.dispatchEvent(new root.ownerDocument.defaultView.MouseEvent('mouseover', { bubbles: true }));
+  const tip = root.querySelector('.arc-tooltip');
+  assert.strictEqual(tip.hidden, false);
+  assert.match(tip.textContent, /step \d+ of 109/);
+  assert.match(tip.textContent, /sprint ·/);
+});
+
+// ── XSS hardening: javascript: hrefs must never be assigned to a rendered link ──
+// Helper: mount a fresh JSDOM, inject custom hrefs onto items, fire DOMContentLoaded, return nav.
+function mountWithInjectedHrefs(hrefMap) {
+  const dom = new JSDOM('<!doctype html><div data-civilization-arc-nav></div>', {
+    pretendToBeVisual: true, runScripts: "outside-only", url: "http://127.0.0.1:8787/index.html",
+  });
+  ["civilizationOntology.js", "civilizationArcData.js", "civilizationArcLayout.js",
+   "civilizationArcDraw.js"].forEach((f) =>
+    dom.window.eval(fs.readFileSync(path.join(root, "compile/assets", f), "utf8")));
+  const items = dom.window.CIVILIZATION_ARC_DATA.items;
+  Object.keys(hrefMap).forEach((k) => { items[Number(k)].href = hrefMap[k]; });
   dom.window.eval(fs.readFileSync(path.join(root, "compile/assets/civilizationArcNav.js"), "utf8"));
   dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
-
   const nav = dom.window.document.querySelector(".civilization-arc-nav");
-  assert(nav, "arc nav did not mount");
-  assert.strictEqual(nav.getAttribute("data-expanded"), "false", "default nav should be compact");
-  assert(nav.querySelector("svg.arc-svg"), "SVG not rendered");
-  assert(nav.querySelectorAll(".arc-phase-group").length >= 15, "phase groups missing");
-  assert(nav.querySelectorAll(".arc-compact-rail-item").length > 8, "compact summary rail missing");
-  assert(nav.textContent.includes("Open Full"), "full-tab control missing");
-  assert(nav.textContent.includes("Fit full arc"), "fit control missing");
-  assert(nav.textContent.includes("Zoom in"), "zoom-in control missing");
-  assert(nav.textContent.includes("Zoom out"), "zoom-out control missing");
-  assert(nav.textContent.includes("Export SVG"), "export control missing");
-  assert(nav.textContent.includes("Civilization execution worklist"), "execution worklist missing");
-  assert(nav.querySelectorAll(".arc-plan-table").length >= 2, "execution plan tables missing");
-  assert(nav.querySelector("[data-arc-phase-select]"), "phase selector missing");
-  assert(nav.querySelector("[data-arc-deps-toggle]"), "dependency toggle missing");
-  assert(nav.querySelector("[data-arc-labels-toggle]"), "dense-label toggle missing");
-  assert(nav.querySelector("[data-arc-close-details]"), "details close control missing");
-  assert(nav.textContent.includes("Click an item for drill-down details"), "drill-down instruction missing");
+  return { nav, items, dom };
 }
+
+function triggerItem(nav, item, dom) {
+  const id = String(item.id);
+  const marker = nav.querySelector('[data-arc-item="' + id + '"]');
+  if (marker) {
+    marker.dispatchEvent(new dom.window.MouseEvent('mouseover', { bubbles: true }));
+    marker.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  }
+  return marker;
+}
+
+test('javascript: href is never assigned to any rendered link (XSS hardening)', () => {
+  // Test three malicious hrefs and two safe hrefs across different items.
+  const { nav, items, dom } = mountWithInjectedHrefs({
+    0: "javascript:alert(1)",           // MUST be rejected
+    1: "//evil.example/x",              // protocol-relative — MUST be rejected
+    2: "data:text/html,<script>xss</script>",  // data: — MUST be rejected
+    3: "https://example.com/safe",      // MUST render as link
+    4: "the-civilization.html",         // bare relative (real data format) — MUST render as link
+  });
+  assert(nav, "nav did not mount");
+
+  // Trigger malicious items: hover + click each so both tooltip and detail panel are exercised.
+  [0, 1, 2].forEach((idx) => triggerItem(nav, items[idx], dom));
+
+  // Assert: no <a> in the nav has any dangerous href (malicious items active in detail panel).
+  const dangLinks = [...nav.querySelectorAll("a")].filter((a) => {
+    const h = (a.getAttribute("href") || "");
+    return /^javascript:/i.test(h) || /^[\\/]{2}/.test(h) || /^data:/i.test(h);
+  });
+  assert.strictEqual(
+    dangLinks.length, 0,
+    "Dangerous links found: " + dangLinks.map((a) => a.getAttribute("href")).join(", ")
+  );
+
+  // Assert happy path: safe https link renders (click item 3 to load it in detail panel).
+  triggerItem(nav, items[3], dom);
+  const safeLinks = [...nav.querySelectorAll("a")].filter((a) => (a.getAttribute("href") || "").startsWith("https://example.com/safe"));
+  assert.ok(safeLinks.length >= 1, "Safe https href should render a link");
+
+  // Assert happy path: bare relative (the-civilization.html) renders as a link — must NOT vanish.
+  triggerItem(nav, items[4], dom);
+  const relLinks = [...nav.querySelectorAll("a")].filter((a) => (a.getAttribute("href") || "") === "the-civilization.html");
+  assert.ok(relLinks.length >= 1, "Bare relative href 'the-civilization.html' must render a link (safeHref must not reject it)");
+});
 
 const data = loadArcData();
 assertData(data);
 assertRenderedDom();
 
 console.log(
-  `arc DOM smoke ok: ${data.phases.length} phases, ${data.markers.length} markers, ${data.swimlanes.length} swimlanes`
+  `arc DOM smoke ok: ${data.items.length} items, now=${O.deriveNow(data.items)}, ` +
+    `${O.groupBy(data.items, "status").length} status lanes`
 );
