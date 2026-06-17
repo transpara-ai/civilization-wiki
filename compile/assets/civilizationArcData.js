@@ -692,10 +692,9 @@
         family: "v4.0 (K/L)",
         deps: [],
         href: "gate-k.html",
-        note: "docs#138 merged the explicit Gate K pre-go-live waiver (merge f8ed4a9dc4612d56959f9f8b5d398c4f58b3655d): N5/Gate K are closed for pre-live sequencing only. This is not production go-live clearance and does not authorize live secrets, customer data, protected runtime execution, deploys, value allocation, or any autonomy increase.",
+        note: "Internal docs#138 recorded the explicit Gate K pre-go-live waiver; private merge evidence was rechecked on 2026-06-17. N5/Gate K are closed for pre-live sequencing only. This is not production go-live clearance and does not authorize live secrets, customer data, protected runtime execution, deploys, value allocation, or any autonomy increase.",
         evidence_links: [
-          { label: "docs#138", href: "https://github.com/transpara-ai/docs/pull/138" },
-          { label: "docs merge f8ed4a9", href: "https://github.com/transpara-ai/docs/commit/f8ed4a9dc4612d56959f9f8b5d398c4f58b3655d" },
+          { label: "Gate K waiver summary", href: "gate-k.html" },
         ],
       },
 
@@ -1097,10 +1096,9 @@
         family: "Deployment register (G-0..G-8.4)",
         deps: [],
         href: "deployment-arc.html",
-        note: "Packet G-0 executed and closed via docs#119 (merge b5cf13121b660304d27e63f9314dde5e8660ea4b): forensic evidence was preserved as annotated tags, stale branches were deleted after fail-closed head re-checks, run-findings refs were updated, and auto-delete-heads was recorded. No further G-0 authority remains.",
+        note: "Packet G-0 executed and closed via internal docs#119; private merge evidence was rechecked on 2026-06-17. Forensic evidence was preserved as annotated tags, stale branches were deleted after fail-closed head re-checks, run-findings refs were updated, and auto-delete-heads was recorded. No further G-0 authority remains.",
         evidence_links: [
-          { label: "docs#119", href: "https://github.com/transpara-ai/docs/pull/119" },
-          { label: "docs merge b5cf131", href: "https://github.com/transpara-ai/docs/commit/b5cf13121b660304d27e63f9314dde5e8660ea4b" },
+          { label: "Deployment arc summary", href: "deployment-arc.html" },
         ],
       },
       {
@@ -1888,7 +1886,7 @@
         goal: "goal-north-star",
         family: "v3.9 milestones (A-J)",
         deps: ["n2"],
-        href: "https://github.com/transpara-ai/docs/pull/132",
+        href: "gate-k.html",
         note: "Done: the External Committee Event-1 / Gate-K authority was granted (decision: Notify; Michael Saucier acting for the Committee, two-human approval waived for this bounded Level-0 grant) and recorded on docs main via #132 (2026-06-15); the Gate-K meta-loop packet merged via #115. Gate-K satisfaction itself is a separate gate — see N4 and the current-gate summary.",
       },
       {
@@ -1927,10 +1925,9 @@
         family: "v4.0 (K/L)",
         deps: ["n4"],
         href: "gate-k.html",
-        note: "N5/Gate K closed for pre-live sequencing via docs#138 (merge f8ed4a9dc4612d56959f9f8b5d398c4f58b3655d). The waiver explicitly accepts the missing AC-K evidence and status-poster residual for pre-live work only, and preserves the go-live hard stop: live secrets, customer data, customer-facing launch, production deploy, protected runtime execution, value allocation, and autonomy increases still require future evidence or a production-grade waiver.",
+        note: "N5/Gate K closed for pre-live sequencing via internal docs#138; private merge evidence was rechecked on 2026-06-17. The waiver explicitly accepts the missing AC-K evidence and status-poster residual for pre-live work only, and preserves the go-live hard stop: live secrets, customer data, customer-facing launch, production deploy, protected runtime execution, value allocation, and autonomy increases still require future evidence or a production-grade waiver.",
         evidence_links: [
-          { label: "docs#138", href: "https://github.com/transpara-ai/docs/pull/138" },
-          { label: "docs merge f8ed4a9", href: "https://github.com/transpara-ai/docs/commit/f8ed4a9dc4612d56959f9f8b5d398c4f58b3655d" },
+          { label: "Gate K waiver summary", href: "gate-k.html" },
         ],
       },
       {
@@ -2208,7 +2205,7 @@
           work: "Resolve Event-1 / Gate-E authority",
           surface: "docs#132 grant, docs#115 packet, Hive authority, human operator decision",
           gate: "External Committee Event-1 grant",
-          href: "https://github.com/transpara-ai/docs/pull/132",
+          href: "gate-k.html",
           finish: "Done: the External Committee Event-1 / Gate-K authority was granted (decision: Notify; Michael Saucier acting for the Committee, two-human approval waived for this bounded Level-0 grant) and recorded on docs main via #132 (2026-06-15); the Gate-K meta-loop packet merged via #115. Gate-K satisfaction itself is a separate gate — see N4 and the current-gate summary.",
         },
         {
@@ -2227,7 +2224,7 @@
           surface: "transpara-ai/docs, human Operator/External Committee waiver",
           gate: "Gate-K pre-live waiver; go-live revalidation boundary",
           href: "gate-k.html",
-          finish: "N5/Gate K closed for pre-live sequencing via docs#138 (merge f8ed4a9dc4612d56959f9f8b5d398c4f58b3655d). The waiver explicitly accepts the missing AC-K evidence and status-poster residual for pre-live work only, and preserves the go-live hard stop: live secrets, customer data, customer-facing launch, production deploy, protected runtime execution, value allocation, and autonomy increases still require future evidence or a production-grade waiver.",
+          finish: "N5/Gate K closed for pre-live sequencing via internal docs#138; private merge evidence was rechecked on 2026-06-17. The waiver explicitly accepts the missing AC-K evidence and status-poster residual for pre-live work only, and preserves the go-live hard stop: live secrets, customer data, customer-facing launch, production deploy, protected runtime execution, value allocation, and autonomy increases still require future evidence or a production-grade waiver.",
         },
         {
           order: "N6",

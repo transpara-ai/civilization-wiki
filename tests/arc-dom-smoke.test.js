@@ -246,13 +246,13 @@ test('Gate K renders as the blocked go-live frontier with evidence links', () =>
   assert.match(detail.textContent, /boundary/i);
   assert.match(detail.textContent, /pre live closed go live blocked/i);
   assert.match(detail.textContent, /go-live revalidation blocked/i);
+  assert.match(detail.textContent, /private merge evidence was rechecked/i);
+  assert.doesNotMatch(detail.textContent, /\b[0-9a-f]{40}\b/i);
   const evidenceHrefs = [...detail.querySelectorAll('.arc-detail-evidence-link')]
     .map((a) => a.getAttribute("href"));
-  assert(evidenceHrefs.includes("https://github.com/transpara-ai/docs/pull/138"));
-  assert(
-    evidenceHrefs.includes("https://github.com/transpara-ai/docs/commit/f8ed4a9dc4612d56959f9f8b5d398c4f58b3655d"),
-    "Gate K detail must link the docs#138 merge commit"
-  );
+  assert(evidenceHrefs.includes("gate-k.html"));
+  assert(!evidenceHrefs.some((href) => href && href.includes("github.com/transpara-ai/docs")),
+    "Gate K detail must not link private docs repo evidence");
 });
 
 const data = loadArcData();
