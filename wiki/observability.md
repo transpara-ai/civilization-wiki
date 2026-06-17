@@ -3,7 +3,7 @@ entity: Observability
 aliases: [transparency contract, T1–T7, civilization transparency, dark-factory observability, fail-legible]
 tier: architecture
 status: compiled
-last_compiled: "2026-06-14"
+last_compiled: "2026-06-17"
 sources:
   - repos/docs/dark-factory/implementation/visualization/transparency-contract-v0.1.0.md  # T1–T7 spec, satisfaction map
   - repos/docs/dark-factory/implementation/visualization/observability-as-built-recon-v0.1.0.md  # as-built API inventory
@@ -47,7 +47,7 @@ Chain length and verification status (`VerifyChain()`), event counts, and snapsh
 
 ### T6 — Posture is never overstated
 
-Gate chips carry their bounded scope verbatim. Candidate gates (v4.0 / Gate K / Gate L at time of writing) always render as candidate or unsatisfied — never as satisfied. Static program posture and live runtime data are visually distinct.
+Gate chips carry their bounded scope verbatim. Candidate gates (v4.0 / Gate K / Gate L at time of writing) render the precise boundary: Gate K may show closed-for-pre-live while still warning that go-live/live-data revalidation is blocked; Gate L remains unsatisfied. Static program posture and live runtime data are visually distinct.
 
 ### T7 — Read-only by construction
 

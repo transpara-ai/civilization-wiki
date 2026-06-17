@@ -94,6 +94,21 @@ function assertData(data) {
   // executionPlan is still present and consumed by the plan board.
   assert(data.executionPlan, "execution plan missing");
   assert(/^\d{4}-\d{2}-\d{2}$/.test(data.executionPlan.updated), "execution plan date must be ISO");
+
+  // Gate K is pre-live closed but remains the machine-readable go-live blocker.
+  const gateK = data.items.find((it) => it.id === "gate-k");
+  assert(gateK, "gate-k item missing");
+  assert.strictEqual(gateK.status, "active");
+  assert.strictEqual(gateK.blocked, true);
+  assert.strictEqual(gateK.blocked_reason, "go-live-revalidation");
+  assert.strictEqual(gateK.boundary_status, "pre-live-closed-go-live-blocked");
+  assert.strictEqual(gateK.go_live_revalidation, "blocked");
+  assert(
+    O.groupBy(data.items, "status").some((lane) =>
+      lane.lane === "blocked" && lane.items.some((it) => it.id === "gate-k")
+    ),
+    "gate-k must remain in the machine-readable blocked lane"
+  );
 }
 
 // ── Rendered DOM: the new chart structure exists ──
@@ -107,6 +122,9 @@ function assertRenderedDom() {
   assert(nav.querySelectorAll(".arc-item-group").length > 0, "no item node groups produced");
   assert(nav.querySelectorAll(".arc-marker").length > 0, "no item shapes produced");
   assert(nav.querySelector(".arc-now-line"), "now-line element missing");
+  assert.match(nav.querySelector(".arc-now-panel").textContent, /Gate-K/);
+  assert.match(nav.querySelector(".arc-now-panel").textContent, /blocked/i);
+  assert.strictEqual(nav.querySelectorAll(".arc-now-blocker").length, 0, "now panel should degrade to gate-only focus when no blocked work item remains");
 }
 
 const { test } = require("node:test");
@@ -137,7 +155,7 @@ test('tooltip shows sprint + ordinal step + provenance', () => {
 
 // ── XSS hardening: javascript: hrefs must never be assigned to a rendered link ──
 // Helper: mount a fresh JSDOM, inject custom hrefs onto items, fire DOMContentLoaded, return nav.
-function mountWithInjectedHrefs(hrefMap) {
+function mountWithInjectedHrefs(hrefMap, evidenceMap = {}) {
   const dom = new JSDOM('<!doctype html><div data-civilization-arc-nav></div>', {
     pretendToBeVisual: true, runScripts: "outside-only", url: "http://127.0.0.1:8787/index.html",
   });
@@ -146,6 +164,7 @@ function mountWithInjectedHrefs(hrefMap) {
     dom.window.eval(fs.readFileSync(path.join(root, "compile/assets", f), "utf8")));
   const items = dom.window.CIVILIZATION_ARC_DATA.items;
   Object.keys(hrefMap).forEach((k) => { items[Number(k)].href = hrefMap[k]; });
+  Object.keys(evidenceMap).forEach((k) => { items[Number(k)].evidence_links = evidenceMap[k]; });
   dom.window.eval(fs.readFileSync(path.join(root, "compile/assets/civilizationArcNav.js"), "utf8"));
   dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
   const nav = dom.window.document.querySelector(".civilization-arc-nav");
@@ -170,11 +189,19 @@ test('javascript: href is never assigned to any rendered link (XSS hardening)', 
     2: "data:text/html,<script>xss</script>",  // data: — MUST be rejected
     3: "https://example.com/safe",      // MUST render as link
     4: "the-civilization.html",         // bare relative (real data format) — MUST render as link
+  }, {
+    5: [
+      { href: "javascript:alert(2)" },
+      { label: "bad evidence javascript", href: "javascript:alert(1)" },
+      { label: "bad evidence data", href: "data:text/html,<script>xss</script>" },
+      { label: "safe evidence", href: "https://example.com/evidence" },
+    ],
   });
   assert(nav, "nav did not mount");
 
   // Trigger malicious items: hover + click each so both tooltip and detail panel are exercised.
   [0, 1, 2].forEach((idx) => triggerItem(nav, items[idx], dom));
+  triggerItem(nav, items[5], dom);
 
   // Assert: no <a> in the nav has any dangerous href (malicious items active in detail panel).
   const dangLinks = [...nav.querySelectorAll("a")].filter((a) => {
@@ -186,6 +213,11 @@ test('javascript: href is never assigned to any rendered link (XSS hardening)', 
     "Dangerous links found: " + dangLinks.map((a) => a.getAttribute("href")).join(", ")
   );
 
+  const safeEvidenceLinks = [...nav.querySelectorAll(".arc-detail-evidence-link")]
+    .map((a) => a.getAttribute("href"));
+  assert.deepStrictEqual(safeEvidenceLinks, ["https://example.com/evidence"]);
+  assert.doesNotMatch(nav.querySelector(".arc-detail-panel").textContent, /evidence\s*·/i);
+
   // Assert happy path: safe https link renders (click item 3 to load it in detail panel).
   triggerItem(nav, items[3], dom);
   const safeLinks = [...nav.querySelectorAll("a")].filter((a) => (a.getAttribute("href") || "").startsWith("https://example.com/safe"));
@@ -195,6 +227,32 @@ test('javascript: href is never assigned to any rendered link (XSS hardening)', 
   triggerItem(nav, items[4], dom);
   const relLinks = [...nav.querySelectorAll("a")].filter((a) => (a.getAttribute("href") || "") === "the-civilization.html");
   assert.ok(relLinks.length >= 1, "Bare relative href 'the-civilization.html' must render a link (safeHref must not reject it)");
+});
+
+test('Gate K renders as the blocked go-live frontier with evidence links', () => {
+  const { nav, svg, dom } = mountArc();
+  const gate = svg.querySelector('[data-arc-item="gate-k"]');
+  assert(gate, "gate-k marker missing");
+  assert(gate.classList.contains("arc-blocked"), "gate-k marker must carry blocked class");
+
+  gate.dispatchEvent(new dom.window.MouseEvent('mouseover', { bubbles: true }));
+  const tip = nav.querySelector('.arc-tooltip');
+  assert.match(tip.textContent, /gate · blocked/i);
+
+  gate.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  const detail = nav.querySelector('.arc-detail-panel');
+  assert.match(detail.textContent, /Blocked/);
+  assert.match(detail.textContent, /go-live/i);
+  assert.match(detail.textContent, /boundary/i);
+  assert.match(detail.textContent, /pre live closed go live blocked/i);
+  assert.match(detail.textContent, /go-live revalidation blocked/i);
+  assert.match(detail.textContent, /private merge evidence was rechecked/i);
+  assert.doesNotMatch(detail.textContent, /\b[0-9a-f]{40}\b/i);
+  const evidenceHrefs = [...detail.querySelectorAll('.arc-detail-evidence-link')]
+    .map((a) => a.getAttribute("href"));
+  assert(evidenceHrefs.includes("gate-k.html"));
+  assert(!evidenceHrefs.some((href) => href && href.includes("github.com/transpara-ai/docs")),
+    "Gate K detail must not link private docs repo evidence");
 });
 
 const data = loadArcData();

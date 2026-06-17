@@ -3,7 +3,7 @@ entity: The Deployment Arc
 aliases: [deployment arc, DF deployment arc, arc from Slice 1 to operated factory]
 tier: arc
 status: compiled
-last_compiled: "2026-06-14"
+last_compiled: "2026-06-17"
 sources:
   - docs/dark-factory/reunification/2026-06-09-deployment-arc.md  # DF-REUNIFY-2026-06-09-DEPLOYMENT-ARC v0.1.4 — arc structure, as-built review, phases, pillar scorecard
   - docs/dark-factory/reunification/2026-06-10-deployment-arc-execution-plan.md  # DF-REUNIFY-2026-06-10-DEPLOYMENT-ARC-EXECUTION v0.5.0 — execution model, packet register, conductor kickoff
@@ -157,7 +157,7 @@ The arc enumerates these explicitly, carried here because they are load-bearing:
 ## Relationship to doctrine
 
 - [[v3-9]] is accepted canonical. The arc cites its implementation material as current planning tracker evidence, not accepted doctrine. Its gates (A–J) are satisfied for their named bounded fixtures only.
-- [[v4-0]] is candidate, not accepted. Gates K (interim loop hardening) and L (final acceptance) are defined and unsatisfied. The arc's Phase 8 closes Gate L.
+- [[v4-0]] is candidate, not accepted. Gate K (interim loop hardening) is closed for pre-live sequencing by waiver, with production go-live/live-data revalidation still blocked; Gate L (final acceptance) remains defined and unsatisfied. The arc's Phase 8 closes Gate L.
 - [[the-reunification]] is the spine. The arc extends the reunification's demonstration-first method to full deployment; it does not supersede v3.9 or accept v4.0.
 - [[slice-1-completion]] ⚠ (not yet compiled) is what Phase 1 produces — the first society-built artifact merging to docs main with a complete inspectable chain.
 
