@@ -118,6 +118,13 @@ test('axis renders 15 sprint start-ticks and no era labels', () => {
   assert.ok(svg.querySelector('.arc-now-line')); // now-line preserved
 });
 
+test('gate sub-row labels are legible (>=11px) and present for 4 families', () => {
+  const { svg } = mountArc();
+  const subs = [...svg.querySelectorAll('.arc-subrow-label')];
+  assert.ok(subs.length >= 4);
+  subs.forEach(t => assert.ok(Number(t.getAttribute('font-size')) >= 11));
+});
+
 const data = loadArcData();
 assertData(data);
 assertRenderedDom();

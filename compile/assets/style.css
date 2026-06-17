@@ -1085,6 +1085,8 @@ code,pre,.mono{font-family:var(--mono)}
 
 .arc-track-band{}
 .arc-track-label,.arc-track-chevron{cursor:pointer}
+.arc-track-label{font-weight:600}
+.arc-subrow-label{fill:var(--color-text-secondary)}
 
 /* Tooltip — absolutely positioned inside the frame, follows the cursor. */
 .arc-tracks-nav .arc-tooltip{

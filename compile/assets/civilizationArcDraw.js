@@ -166,7 +166,7 @@
         "class": "arc-track-label",
         x: labelX, y: labelY,
         "text-anchor": "end",
-        "font-size": 12,
+        "font-size": 13,
         fill: "var(--color-text-primary)",
         "data-arc-collapse": track.id,
       });
@@ -182,8 +182,8 @@
           "class": "arc-subrow-label",
           x: plotLeft - 14, y: num(row.y) + 4,
           "text-anchor": "end",
-          "font-size": 9,
-          fill: "var(--color-text-tertiary)",
+          "font-size": 11,
+          fill: "var(--color-text-secondary)",
         });
         sub.textContent = rowLabel;
         svg.appendChild(sub);
