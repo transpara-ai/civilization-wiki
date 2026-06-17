@@ -49,10 +49,10 @@ class PrToItem(unittest.TestCase):
 class CollectAndShape(unittest.TestCase):
     def test_resolve_repos_uses_dark_factory_topic_plus_wiki(self):
         rows = [
-            {"name": "agent", "repositoryTopics": [{"name": "dark-factory"}]},
+            {"name": "agent", "repositoryTopics": [{"name": "dark-factory"}], "isPrivate": False},
             {"name": "docs", "repositoryTopics": [{"name": "dark-factory"}], "isPrivate": True},
-            {"name": "site", "repositoryTopics": [{"name": "dark-factory"}]},
-            {"name": "hive", "repositoryTopics": [{"name": "dark-factory"}]},
+            {"name": "site", "repositoryTopics": [{"name": "dark-factory"}], "isPrivate": False},
+            {"name": "hive", "repositoryTopics": [{"name": "dark-factory"}], "isPrivate": False},
             {"name": "tinstaller", "repositoryTopics": []},
         ]
         orig = inflight.gh_json
@@ -67,10 +67,27 @@ class CollectAndShape(unittest.TestCase):
         repo_access = {"agent": True, "civilization-wiki": True, "docs": False, "site": True}
         self.assertEqual(inflight.public_repos(repo_access), ["agent", "civilization-wiki", "site"])
 
+    def test_missing_visibility_fails_closed(self):
+        rows = [
+            {"name": "agent", "repositoryTopics": [{"name": "dark-factory"}]},
+            {"name": "site", "repositoryTopics": [{"name": "dark-factory"}], "isPrivate": None},
+            {"name": "hive", "repositoryTopics": [{"name": "dark-factory"}], "isPrivate": False},
+        ]
+        orig = inflight.gh_json
+        inflight.gh_json = lambda args: rows
+        try:
+            repo_access = inflight.resolve_repo_access()
+        finally:
+            inflight.gh_json = orig
+        self.assertEqual(repo_access["agent"], False)
+        self.assertEqual(repo_access["site"], False)
+        self.assertEqual(repo_access["hive"], True)
+        self.assertEqual(inflight.public_repos(repo_access), ["civilization-wiki", "hive"])
+
     def test_collect_items_records_repo_errors_without_dropping_good_repos(self):
         def fake_gh_json(args):
             if "broken" in " ".join(args):
-                raise RuntimeError("gh: not found")
+                raise RuntimeError("secret stderr for private docs")
             return [{"number": 1, "title": "t", "author": {"login": "x"},
                      "url": "https://github.com/transpara-ai/hive/pull/1",
                      "state": "OPEN", "isDraft": False}]
@@ -82,6 +99,7 @@ class CollectAndShape(unittest.TestCase):
             inflight.gh_json = orig
         self.assertTrue(any(i["id"] == "pr-hive-1" for i in items))
         self.assertTrue(any("broken" in e for e in errors))
+        self.assertFalse(any("secret stderr" in e for e in errors))
 
     def test_items_dedup_by_id(self):
         rows = [{"number": 2, "title": "t", "author": {"login": "x"},

@@ -54,6 +54,10 @@ def gh_json(args):
     return json.loads(p.stdout or "[]")
 
 
+def error_summary(label, exc):
+    return "%s: %s" % (label, exc.__class__.__name__)
+
+
 def resolve_repo_access():
     """Live dark-factory set (+ civilization-wiki), resolved from GitHub topics and visibility."""
     rows = gh_json(["repo", "list", "transpara-ai", "--no-archived", "--limit", "200",
@@ -62,7 +66,7 @@ def resolve_repo_access():
     for r in rows:
         topics = [t.get("name") for t in (r.get("repositoryTopics") or [])]
         if "dark-factory" in topics:
-            repo_access[r["name"]] = not bool(r.get("isPrivate"))
+            repo_access[r["name"]] = (r.get("isPrivate") is False)
     repo_access["civilization-wiki"] = True
     return repo_access
 
@@ -91,7 +95,7 @@ def collect_items(repos):
                              "--search", "merged:>=%s" % since,
                              "--json", _FIELDS, "--limit", "100"])
         except Exception as e:  # one bad repo never zeroes the whole overlay
-            errors.append("%s: %s" % (repo, e))
+            errors.append(error_summary(repo, e))
             continue
         for pr in rows:
             it = pr_to_item(pr, repo)
@@ -106,7 +110,7 @@ def main():
         repo_access = resolve_repo_access()
         repo_err = []
     except Exception as e:
-        repo_access, repo_err = {"civilization-wiki": True}, ["resolve_repos: %s" % e]
+        repo_access, repo_err = {"civilization-wiki": True}, [error_summary("resolve_repo_access", e)]
     repos = public_repos(repo_access)
     items, errors = collect_items(repos)
     errors = repo_err + errors
