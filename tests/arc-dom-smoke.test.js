@@ -190,6 +190,7 @@ test('javascript: href is never assigned to any rendered link (XSS hardening)', 
     4: "the-civilization.html",         // bare relative (real data format) — MUST render as link
   }, {
     5: [
+      { href: "javascript:alert(2)" },
       { label: "bad evidence javascript", href: "javascript:alert(1)" },
       { label: "bad evidence data", href: "data:text/html,<script>xss</script>" },
       { label: "safe evidence", href: "https://example.com/evidence" },
@@ -214,6 +215,7 @@ test('javascript: href is never assigned to any rendered link (XSS hardening)', 
   const safeEvidenceLinks = [...nav.querySelectorAll(".arc-detail-evidence-link")]
     .map((a) => a.getAttribute("href"));
   assert.deepStrictEqual(safeEvidenceLinks, ["https://example.com/evidence"]);
+  assert.doesNotMatch(nav.querySelector(".arc-detail-panel").textContent, /evidence\s*·/i);
 
   // Assert happy path: safe https link renders (click item 3 to load it in detail panel).
   triggerItem(nav, items[3], dom);
@@ -240,6 +242,9 @@ test('Gate K renders as the blocked go-live frontier with evidence links', () =>
   const detail = nav.querySelector('.arc-detail-panel');
   assert.match(detail.textContent, /Blocked/);
   assert.match(detail.textContent, /go-live/i);
+  assert.match(detail.textContent, /boundary/i);
+  assert.match(detail.textContent, /pre live closed go live blocked/i);
+  assert.match(detail.textContent, /go-live revalidation blocked/i);
   const evidenceHrefs = [...detail.querySelectorAll('.arc-detail-evidence-link')]
     .map((a) => a.getAttribute("href"));
   assert(evidenceHrefs.includes("https://github.com/transpara-ai/docs/pull/138"));
