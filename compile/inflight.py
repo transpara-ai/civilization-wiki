@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Live in-flight overlay generator for the Civilization Arc.
 
-Collects open and recently merged PRs across GitHub's dark-factory topic plus
-civilization-wiki, writes dist/inflight.json, and records repo-level errors
-fail-loudly in the payload. Uses gh auth but writes only derived PR metadata.
+Collects open and recently merged PRs across public GitHub dark-factory topic
+repos plus civilization-wiki, writes dist/inflight.json, and records omitted
+private repos and repo-level errors in the payload.
 """
 
 import datetime
@@ -54,17 +54,26 @@ def gh_json(args):
     return json.loads(p.stdout or "[]")
 
 
-def resolve_repos():
-    """Live dark-factory set (+ civilization-wiki), resolved from the GitHub topic — never hardcoded."""
+def resolve_repo_access():
+    """Live dark-factory set (+ civilization-wiki), resolved from GitHub topics and visibility."""
     rows = gh_json(["repo", "list", "transpara-ai", "--no-archived", "--limit", "200",
-                    "--json", "name,repositoryTopics"])
-    repos = set()
+                    "--json", "name,repositoryTopics,isPrivate"])
+    repo_access = {}
     for r in rows:
         topics = [t.get("name") for t in (r.get("repositoryTopics") or [])]
         if "dark-factory" in topics:
-            repos.add(r["name"])
-    repos.add("civilization-wiki")
-    return sorted(repos)
+            repo_access[r["name"]] = not bool(r.get("isPrivate"))
+    repo_access["civilization-wiki"] = True
+    return repo_access
+
+
+def resolve_repos():
+    """Live dark-factory set (+ civilization-wiki), resolved from GitHub topics."""
+    return sorted(resolve_repo_access())
+
+
+def public_repos(repo_access):
+    return sorted(repo for repo, is_public in repo_access.items() if is_public)
 
 
 _FIELDS = "number,title,author,url,state,isDraft"
@@ -94,17 +103,20 @@ def collect_items(repos):
 
 def main():
     try:
-        repos = resolve_repos()
+        repo_access = resolve_repo_access()
         repo_err = []
     except Exception as e:
-        repos, repo_err = ["civilization-wiki"], ["resolve_repos: %s" % e]
+        repo_access, repo_err = {"civilization-wiki": True}, ["resolve_repos: %s" % e]
+    repos = public_repos(repo_access)
     items, errors = collect_items(repos)
     errors = repo_err + errors
+    omitted_private_repo_count = len(repo_access) - len(repos)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "generated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
         "window_days": MERGED_WINDOW_DAYS,
         "repos": repos,
+        "omitted_private_repo_count": omitted_private_repo_count,
         "errors": errors,
         "items": items,
     }

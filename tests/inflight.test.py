@@ -1,4 +1,4 @@
-import importlib.util, pathlib, unittest
+import contextlib, importlib.util, io, json, pathlib, tempfile, unittest
 
 spec = importlib.util.spec_from_file_location(
     "inflight", pathlib.Path(__file__).resolve().parents[1] / "compile" / "inflight.py")
@@ -50,6 +50,7 @@ class CollectAndShape(unittest.TestCase):
     def test_resolve_repos_uses_dark_factory_topic_plus_wiki(self):
         rows = [
             {"name": "agent", "repositoryTopics": [{"name": "dark-factory"}]},
+            {"name": "docs", "repositoryTopics": [{"name": "dark-factory"}], "isPrivate": True},
             {"name": "site", "repositoryTopics": [{"name": "dark-factory"}]},
             {"name": "hive", "repositoryTopics": [{"name": "dark-factory"}]},
             {"name": "tinstaller", "repositoryTopics": []},
@@ -60,7 +61,11 @@ class CollectAndShape(unittest.TestCase):
             repos = inflight.resolve_repos()
         finally:
             inflight.gh_json = orig
-        self.assertEqual(repos, ["agent", "civilization-wiki", "hive", "site"])
+        self.assertEqual(repos, ["agent", "civilization-wiki", "docs", "hive", "site"])
+
+    def test_public_repos_omits_private_collective_members(self):
+        repo_access = {"agent": True, "civilization-wiki": True, "docs": False, "site": True}
+        self.assertEqual(inflight.public_repos(repo_access), ["agent", "civilization-wiki", "site"])
 
     def test_collect_items_records_repo_errors_without_dropping_good_repos(self):
         def fake_gh_json(args):
@@ -101,6 +106,28 @@ class CollectAndShape(unittest.TestCase):
             inflight.gh_json = orig
         self.assertEqual(items, [])
         self.assertEqual(errors, [])
+
+    def test_main_payload_omits_private_repo_names(self):
+        orig_access = inflight.resolve_repo_access
+        orig_collect = inflight.collect_items
+        orig_out = inflight.OUT
+        seen_repos = []
+        with tempfile.TemporaryDirectory() as td:
+            inflight.resolve_repo_access = lambda: {"agent": True, "docs": False, "site": True}
+            inflight.collect_items = lambda repos: (seen_repos.extend(repos) or [], [])
+            inflight.OUT = pathlib.Path(td) / "inflight.json"
+            try:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    inflight.main()
+                payload = json.loads(inflight.OUT.read_text())
+            finally:
+                inflight.resolve_repo_access = orig_access
+                inflight.collect_items = orig_collect
+                inflight.OUT = orig_out
+        self.assertEqual(seen_repos, ["agent", "site"])
+        self.assertEqual(payload["repos"], ["agent", "site"])
+        self.assertEqual(payload["omitted_private_repo_count"], 1)
+        self.assertNotIn("docs", json.dumps(payload))
 
 
 if __name__ == "__main__":
