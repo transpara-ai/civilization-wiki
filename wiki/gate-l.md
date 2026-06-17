@@ -1,6 +1,6 @@
 ---
 entity: Gate L
-aliases: [gate-l, Gate L, v4.0 reconciliation certified, v3.9-to-v4.0 reconciliation]
+aliases: [gate-l, Gate L, v4.0 reconciliation certification predicate, v3.9-to-v4.0 reconciliation]
 tier: architecture
 status: compiled
 last_compiled: "2026-06-17"
@@ -63,7 +63,7 @@ The Event 2 overview names the v3.9 materials that must be carried forward under
 - `implementation/as-built-stage-tracker-v3.9.md` — current-state record.
 - `implementation/state-of-the-system-proof-v3.9.md` — state proof.
 
-The Event 2 design names nine dependent v3.9 documents in `TC-L1`; the overview list above exposes eight path rows. That mismatch is not Gate L progress or a hidden ninth artifact. It is a source-level reconciliation question to resolve before any Event 2 implementation claim can pass AC-L1.
+The Event 2 design names nine dependent v3.9 documents in `TC-L1`; the overview list above exposes eight path rows. That mismatch is not Gate L progress. Whether the ninth row is a distinct artifact or a counting/path-rollup difference is a source-level reconciliation question to resolve before any Event 2 implementation claim can pass AC-L1.
 
 ## Lettering note
 
@@ -90,3 +90,5 @@ As [[gates]] flags, v3.9 uses letters A–J for its accountability-pipeline mile
 - **Secondary:** `raw/open-brain/2026-06.md` — operational summary corroborating Gate L as epic-02 coverage-matrix reconciliation, proposal-only, human-authorized, and parallelizable with Gate K because it carries no autonomy implication.
 
 `[[wikilinks]]` to v4.0 remain forward/candidate references. This article describes Gate L's predicate and authorization boundary; it does not start Event 2, satisfy Gate L, mark v4.0 canonical, or retire v3.9 as the operative baseline.
+
+> ⚠ Source reproducibility note: the `raw/transpara/...` paths cited above are a local mirror of the `transpara-ai/docs` source tier and are gitignored in this public wiki repository. They were read directly during this compilation, but they are not themselves published here. The article summarizes Gate L's non-secret predicate and authorization boundary; it does not publish private repo links, full private SHAs, or the authority packet as a substitute for a future human grant.
