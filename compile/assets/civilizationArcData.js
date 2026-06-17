@@ -48,7 +48,7 @@
     //   ExecutionPlan done/active items: seq in 11.0–13.89 (left of/at frontier)
     //   ExecutionPlan planned/future items: seq in 14.0–15.0 (right of frontier)
     //
-    // deriveNow = max seq among done/active = gate-k at seq 13.9
+    // deriveNow = max seq among done/active = gate-k pre-live closeout at seq 13.9
     //   Verified: no planned/future item has seq < 13.9
     //
     // Risks[] disposition:
@@ -677,10 +677,10 @@
         id: "gate-k",
         code: "Gate-K",
         type: "gate",
-        label: "Loop-hardening gate unsatisfied — AC-K5 attestation, AC-K1–K4 evidence, and the cross-family status-poster residual pending",
-        status: "active",
-        blocked: true,
-        blocked_reason: "gate",
+        label: "Loop-hardening gate closed for pre-live by waiver — live boundary still requires go-live revalidation",
+        status: "done",
+        blocked: false,
+        blocked_reason: null,
         provenance: "reconstructed",
         seq: 13.9,
         repo: ["docs"],
@@ -690,12 +690,12 @@
         family: "v4.0 (K/L)",
         deps: [],
         href: "gate-k.html",
-        note: null,
+        note: "docs#138 merged the explicit Gate K pre-go-live waiver: N5/Gate K are closed for pre-live sequencing only. This is not production go-live clearance and does not authorize live secrets, customer data, protected runtime execution, deploys, value allocation, or any autonomy increase.",
       },
 
       // ── Reconstructed gate landscape (provenance: reconstructed) ─────────
       // Laned by family for the "gate" grouping. Allowlist invariant:
-      // deriveNow stays 13.9 (gate-k). Every done/active gate seq < 13.9;
+      // deriveNow stays 13.9 (gate-k pre-live closeout). Every done/active gate seq <= 13.9;
       // every planned/future gate seq > 13.9. Grounding files:
       //   wiki/gates.md (gate-class register; A–J lettering; release/security
       //     gate classes), wiki/gate-k.md, wiki/gate-l.md, wiki/deployment-arc.md,
@@ -1079,7 +1079,7 @@
         code: "G-0",
         type: "gate",
         label: "docs branch collapse — forensic tags, branch deletes, auto-delete-heads",
-        status: "active",
+        status: "done",
         blocked: false,
         blocked_reason: null,
         provenance: "reconstructed",
@@ -1091,14 +1091,14 @@
         family: "Deployment register (G-0..G-8.4)",
         deps: [],
         href: "deployment-arc.html",
-        note: "Packet G-0 (READY): collapse transpara-ai/docs to main, preserve forensic evidence as 5 annotated tags, delete 6 branches, fix run-findings refs, enable auto-delete-heads; ref/settings ops are protected-class, fail-closed pre-deletion head re-check.",
+        note: "Packet G-0 executed and closed via docs#119: forensic evidence was preserved as annotated tags, stale branches were deleted after fail-closed head re-checks, run-findings refs were updated, and auto-delete-heads was recorded. No further G-0 authority remains.",
       },
       {
         id: "g-1-1",
         code: "G-1.1",
         type: "gate",
         label: "Hive governance periodic re-check (closes finding F8)",
-        status: "active",
+        status: "done",
         blocked: false,
         blocked_reason: null,
         provenance: "reconstructed",
@@ -1110,7 +1110,7 @@
         family: "Deployment register (G-0..G-8.4)",
         deps: [],
         href: "deployment-arc.html",
-        note: "Packet G-1.1 (READY, always M-ASK — touches pkg/loop): extend the gated periodic re-check to keepalive governance agents so the review→fix loop engages on historical events after a restart.",
+        note: "Packet G-1.1 merged via hive#148 (77a7c392c0b49a32364e578e6aec4da46ea884f9): the gated periodic re-check now reaches keepalive reviewer duties so historical completion events after restart re-enter the review loop.",
       },
       {
         id: "g-1-4",
@@ -1894,16 +1894,16 @@
         family: "v4.0 (K/L)",
         deps: ["n3"],
         href: "gate-k.html",
-        note: "Done: meta-loop artifacts (stage-1/stage-3 prompt templates, data-handling policy, review convention) are merged and canonical via #115. Satisfying Gate-K itself is the separate, still-open gate (see the current-gate summary) — held open on AC-K5 data-handling attestation plus AC-K2/AC-K4 negative-test evidence, tracked via #133-#137.",
+        note: "Done: meta-loop artifacts (stage-1/stage-3 prompt templates, data-handling policy, review convention) are merged and canonical via #115. The later docs#138 waiver closed N5/Gate K for pre-live sequencing only; go-live still requires revalidation or a production-grade waiver.",
       },
       {
         id: "n5",
         code: "N5",
         type: "work",
-        label: "Close out Gate-K: supply the remaining AC-K evidence (AC-K5 attestation, AC-K2/AC-K4 negative tests, AC-K1/AC-K3 reconciliation) and accept the status-poster residual — or record a waiver",
-        status: "active",
-        blocked: true,
-        blocked_reason: "gate",
+        label: "Close out Gate-K for pre-live sequencing by recording the human waiver and live-boundary revalidation obligations",
+        status: "done",
+        blocked: false,
+        blocked_reason: null,
         provenance: "derived",
         seq: 13.85,
         repo: ["docs"],
@@ -1913,7 +1913,7 @@
         family: "v4.0 (K/L)",
         deps: ["n4"],
         href: "gate-k.html",
-        note: "Gate-K is held open (docs#133/#134/#137): AC-K5 needs the per-tool zero-retention/no-train data-handling attestation (recorded UNKNOWN/keep-closed); AC-K2/AC-K4 need negative-test evidence; AC-K1/AC-K3 need predicate reconciliation (branch-protection/direct-push, CODEOWNERS); and the cross-family-adversarial-review status-poster/app-pinning residual (app_id: null) must be accepted. Closing it requires that evidence or an explicit Committee waiver; until then the loop fails closed. This is the current gate.",
+        note: "N5/Gate K closed for pre-live sequencing via docs#138. The waiver explicitly accepts the missing AC-K evidence and status-poster residual for pre-live work only, and preserves the go-live hard stop: live secrets, customer data, customer-facing launch, production deploy, protected runtime execution, value allocation, and autonomy increases still require future evidence or a production-grade waiver.",
       },
       {
         id: "n6",
@@ -1932,7 +1932,7 @@
         family: "v4.0 (K/L)",
         deps: ["n5"],
         href: "v4-0.html",
-        note: "v4.0 seed doctrine (DF-V4.0-ADR-001) was accepted via #127 (2026-06-12), but v4.0 stays a candidate folder and v3.9 remains the operative baseline - folder-canonical acceptance is structurally unmet (reconciliation coverage matrix). The promotion proper is still queued behind the Gate-K closeout (N5).",
+        note: "v4.0 seed doctrine (DF-V4.0-ADR-001) was accepted via #127 (2026-06-12), but v4.0 stays a candidate folder and v3.9 remains the operative baseline - folder-canonical acceptance is structurally unmet (reconciliation coverage matrix). With N5 closed for pre-live by waiver, promotion still requires the Gate L reconciliation/acceptance path and explicit human authorization.",
       },
       {
         id: "n7",
@@ -2157,11 +2157,11 @@
 
     executionPlan: {
       title: "Civilization execution worklist",
-      updated: "2026-06-15",
+      updated: "2026-06-17",
       endGoal:
         "Reach a steady-state Transpara-AI civilization that can accept new or issue-scanned work, store durable artifacts in the correct repository, open governed PRs, iterate through cross-family adversarial review, surface bulletproof work for human approval, and keep the whole run observable.",
       summary: [
-        { label: "Current gate", value: "Gate-K loop-hardening (AC-K5 attestation + remaining AC-K1–K4 / status-poster evidence pending)", status: "blocked" },
+        { label: "Current gate", value: "Gate K closed for pre-live by docs#138 waiver; go-live revalidation remains a hard boundary", status: "done" },
         { label: "Merge gate", value: "Seven repos protected with cross-family review", status: "done" },
         { label: "Storage posture", value: "Artifacts and PRs stay repo-native", status: "active" },
         { label: "Final mode", value: "Always-on governed factory", status: "planned" },
@@ -2200,16 +2200,16 @@
           surface: "transpara-ai/docs",
           gate: "Gate-K review convention and data policy",
           href: "gate-k.html",
-          finish: "Done: meta-loop artifacts (stage-1/stage-3 prompt templates, data-handling policy, review convention) are merged and canonical via #115. Satisfying Gate-K itself is the separate, still-open gate (see the current-gate summary) — held open on AC-K5 data-handling attestation plus AC-K2/AC-K4 negative-test evidence, tracked via #133-#137.",
+          finish: "Done: meta-loop artifacts (stage-1/stage-3 prompt templates, data-handling policy, review convention) are merged and canonical via #115. The later docs#138 waiver closed N5/Gate K for pre-live sequencing only; go-live still requires revalidation or a production-grade waiver.",
         },
         {
           order: "N5",
-          status: "blocked",
-          work: "Close out Gate-K: supply the remaining AC-K evidence (AC-K5 attestation, AC-K2/AC-K4 negative tests, AC-K1/AC-K3 reconciliation) and accept the status-poster residual — or record a waiver",
-          surface: "transpara-ai/docs, human Operator/Security attestation",
-          gate: "Gate-K satisfaction (loop-hardening evidence predicate)",
+          status: "done",
+          work: "Close out Gate-K for pre-live sequencing by recording the human waiver and live-boundary revalidation obligations",
+          surface: "transpara-ai/docs, human Operator/External Committee waiver",
+          gate: "Gate-K pre-live waiver; go-live revalidation boundary",
           href: "gate-k.html",
-          finish: "Gate-K is held open (docs#133/#134/#137): AC-K5 needs the per-tool zero-retention/no-train data-handling attestation (recorded UNKNOWN/keep-closed); AC-K2/AC-K4 need negative-test evidence; AC-K1/AC-K3 need predicate reconciliation (branch-protection/direct-push, CODEOWNERS); and the cross-family-adversarial-review status-poster/app-pinning residual (app_id: null) must be accepted. Closing it requires that evidence or an explicit Committee waiver; until then the loop fails closed. This is the current gate.",
+          finish: "N5/Gate K closed for pre-live sequencing via docs#138. The waiver explicitly accepts the missing AC-K evidence and status-poster residual for pre-live work only, and preserves the go-live hard stop: live secrets, customer data, customer-facing launch, production deploy, protected runtime execution, value allocation, and autonomy increases still require future evidence or a production-grade waiver.",
         },
         {
           order: "N6",
@@ -2218,7 +2218,7 @@
           surface: "transpara-ai/docs",
           gate: "v4.0 authorization packet",
           href: "v4-0.html",
-          finish: "v4.0 seed doctrine (DF-V4.0-ADR-001) was accepted via #127 (2026-06-12), but v4.0 stays a candidate folder and v3.9 remains the operative baseline - folder-canonical acceptance is structurally unmet (reconciliation coverage matrix). The promotion proper is still queued behind the Gate-K closeout (N5).",
+          finish: "v4.0 seed doctrine (DF-V4.0-ADR-001) was accepted via #127 (2026-06-12), but v4.0 stays a candidate folder and v3.9 remains the operative baseline - folder-canonical acceptance is structurally unmet (reconciliation coverage matrix). With N5 closed for pre-live by waiver, promotion still requires the Gate L reconciliation/acceptance path and explicit human authorization.",
         },
         {
           order: "N7",

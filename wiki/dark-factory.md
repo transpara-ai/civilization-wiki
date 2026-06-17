@@ -9,7 +9,7 @@ aliases:
   - DF
 tier: arc
 status: compiled
-last_compiled: 2026-06-15
+last_compiled: 2026-06-17
 sources:
   - raw/transpara/dark-factory/Dark Factory - Motive, Goal, Approach.md  # DF-MOTIVE-GOAL-APPROACH v0.1.5, status draft, updated 2026-06-12 — first-read orientation: motive, goal, approach, flows, responsibility map, decision register, citation handles
   - raw/transpara/dark-factory/README.md  # folder index: start-here pointer, current revision (v3.9 accepted 2026-06-05), archived baselines v3.2–v3.8, v3.0, v3.1, v2, phase record, reorganization + reunification workstreams
@@ -222,7 +222,7 @@ The arc ladder, in order: v13 silent 5 min → v14 visible 27 min → v15 produc
 
 The catalog deliverable (`codex/fo-roles-catalog-v16`, HEAD `002bcf8`, 9-role v2.0.0 with subtask reading) is pushed to `transpara-ai`. Six oscillation commits are preserved in history; the FO's 24-role reading survives at `b638a44`. The deliverable remains **unreviewed in the FO's sense** — all six reviews in v16 were premised on the wrong repo (v16-F1, below).
 
-**Grant-2 is exhausted** (rounds 4–6 consumed). The hard stop was reached and then **resolved on 2026-06-15**: the External Committee granted **Event-1** (v4.0 Gate-K interim loop hardening; decision *Notify*, `transpara-ai/docs#132`), not a new slice-1 grant. Gate-K itself remains defined and unsatisfied (AC-K5 data-handling attestation pending — docs#137).
+**Grant-2 is exhausted** (rounds 4–6 consumed). The hard stop was reached and then **resolved on 2026-06-15**: the External Committee granted **Event-1** (v4.0 Gate-K interim loop hardening; decision *Notify*, `transpara-ai/docs#132`), not a new slice-1 grant. Gate K was later closed for pre-live sequencing by the human waiver in `transpara-ai/docs#138`; production go-live, live data, protected runtime execution, value allocation, and autonomy increases remain blocked until revalidated.
 
 ### v16 open findings
 
@@ -244,7 +244,7 @@ All five ADR acceptance criteria are confirmed satisfied: External Committee acc
 
 Tier-0 structural guards disposition at acceptance: guard 2b (`npm run verify` as PR check) and 2c (CODEOWNERS on governance-sensitive paths) were **adopted** via the acceptance PR to `transpara-ai/docs`. Guards 3 (injection-quarantine on feedback channel) and 4 (never trust self-reported validation) were **adopted** as standing interim-loop rules by the checkpoint. Guards 1 (meta-loop confidentiality/data-handling policy) and 2a (branch protection on `main`) were **deferred** with reasons recorded.
 
-**What this acceptance does not do** (unchanged from the checkpoint): v3.9 remains the operative baseline; the v4.0 folder is still a candidate (criterion 2 — coverage matrix — remains open, reconciliation unauthorized); Gates F–J remain waiting; Gates K and L remain unsatisfied; residual risks R-001/R-002/R-003 remain unresolved; no autonomy level above the current bootstrap is granted. The v4.0 folder "is documentation doctrine" — it authorizes no implementation.
+**What this acceptance does not do** (unchanged from the checkpoint): v3.9 remains the operative baseline; the v4.0 folder is still a candidate (criterion 2 — coverage matrix — remains open, reconciliation unauthorized); Gates F–J remain waiting; Gate L remains unsatisfied; residual risks R-001/R-002/R-003 remain unresolved; no autonomy level above the current bootstrap is granted. Gate K's later pre-live waiver in `transpara-ai/docs#138` changes sequencing for pre-live work only; it does not accept v4.0 as canonical or authorize production go-live. The v4.0 folder "is documentation doctrine" — it authorizes no implementation.
 
 A manifesto finding was recorded in the acceptance checkpoint: no v4 manifesto artifact exists. Acceptance of a non-existent artifact was refused under the fail-closed rule. Open item for the External Committee: identify, commission, or drop.
 

@@ -3,7 +3,7 @@ entity: The Observatory
 aliases: [observatory, ops/observatory, civilization transparency surface, mission control read view]
 tier: architecture
 status: compiled
-last_compiled: "2026-06-14"
+last_compiled: "2026-06-17"
 sources:
   - repos/site/graph/observatory.go  # full implementation, lines 1–1063
   - repos/docs/dark-factory/implementation/visualization/site-observatory-phase3-plan.md  # route, slice plan, guardrails
@@ -70,7 +70,7 @@ The hive operator projection aggregates pending approvals, authority decisions, 
 The implementation binds the nine visualization principles from the Phase 3 plan. The most operationally significant:
 
 - **No color-only meaning.** Every SVG embeds `<title>` elements; every panel repeats values as text alongside the visual. This satisfies the air-gap and accessibility requirement that data survives without SVG rendering.
-- **Static posture strip.** Gate K and L chips render as candidate/unsatisfied (dashed, labeled), never satisfied. The observatory shows intended posture without asserting it is achieved.
+- **Static posture strip.** Gate K and L chips render bounded status, not a blanket success claim: Gate K can show closed-for-pre-live with go-live revalidation still blocked, while Gate L remains candidate/unsatisfied. The observatory shows intended posture without asserting production readiness.
 - **Verbatim outcome names.** `Autonomous`/`Notify`/`ApprovalRequired`/`Forbidden` are rendered exactly as the DF-SPEC-0004 vocabulary specifies them, never paraphrased.
 - **Provenance on everything.** The feeder base URL, endpoint path, and fetch timestamp appear on every panel.
 
