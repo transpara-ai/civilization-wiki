@@ -73,30 +73,26 @@
       "vector-effect": "non-scaling-stroke",
     }));
 
-    // Era ticks + labels.
-    var eras = layout.eras || [];
-    var labelY = baseY + 16;
-    eras.forEach(function (e, idx) {
-      var ex = num(e.x);
+    // Sprint start-ticks: a short tick + rotated label at each sprint's first item.
+    var ticks = layout.sprintTicks || [];
+    ticks.forEach(function (t) {
+      var tx = num(t.x);
       svg.appendChild(svgEl(doc, "line", {
-        "class": "arc-era-tick",
-        x1: ex, y1: baseY, x2: ex, y2: baseY + 5,
+        "class": "arc-sprint-tick",
+        x1: tx, y1: baseY, x2: tx, y2: baseY + 5,
         stroke: "var(--color-text-tertiary)", "stroke-width": 1,
         "vector-effect": "non-scaling-stroke",
       }));
-      // Right-anchor the final ("future") era if it sits near the right edge so
-      // its text does not overflow the plot.
-      var isLast = idx === eras.length - 1;
-      var anchor = (isLast && ex > plotRight - 24) ? "end" : "middle";
-      var text = svgEl(doc, "text", {
-        "class": "arc-era-label",
-        x: ex, y: labelY,
-        "text-anchor": anchor,
-        "font-size": 11,
+      var label = svgEl(doc, "text", {
+        "class": "arc-sprint-tick-label",
+        x: tx, y: baseY + 9,
+        "text-anchor": "end",
+        "font-size": 9,
         fill: "var(--color-text-tertiary)",
+        transform: "rotate(-40 " + tx + " " + (baseY + 9) + ")",
       });
-      text.textContent = e.label == null ? "" : String(e.label);
-      svg.appendChild(text);
+      label.textContent = t.label == null ? "" : String(t.label);
+      svg.appendChild(label);
     });
 
     // NOW-LINE.

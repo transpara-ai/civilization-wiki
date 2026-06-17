@@ -17,6 +17,21 @@ function loadArcData() {
   return context.window.CIVILIZATION_ARC_DATA;
 }
 
+// ── Reusable mount helper — eval all five modules into a JSDOM window and
+//    dispatch DOMContentLoaded. Returns { nav, svg, dom } for test assertions.
+function mountArc() {
+  const dom = new JSDOM('<!doctype html><div data-civilization-arc-nav></div>', {
+    pretendToBeVisual: true, runScripts: "outside-only", url: "http://127.0.0.1:8787/index.html",
+  });
+  ["civilizationOntology.js", "civilizationArcData.js", "civilizationArcLayout.js",
+   "civilizationArcDraw.js", "civilizationArcNav.js"].forEach((f) =>
+    dom.window.eval(fs.readFileSync(path.join(root, "compile/assets", f), "utf8")));
+  dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
+  const nav = dom.window.document.querySelector(".civilization-arc-nav");
+  const svg = nav ? nav.querySelector("svg.arc-svg") : null;
+  return { nav, svg, dom };
+}
+
 // ── Data contract: items[] exists and passes the ontology allowlist gate ──
 function assertData(data) {
   assert(data, "CIVILIZATION_ARC_DATA missing");
@@ -83,19 +98,9 @@ function assertData(data) {
 
 // ── Rendered DOM: the new chart structure exists ──
 function assertRenderedDom() {
-  const dom = new JSDOM('<!doctype html><div data-civilization-arc-nav></div>', {
-    pretendToBeVisual: true, runScripts: "outside-only", url: "http://127.0.0.1:8787/index.html",
-  });
-  // Load order matters: ontology → data → layout → draw → nav.
-  // render() bails without CivArcLayout + CivArcDraw, so all five must load.
-  ["civilizationOntology.js", "civilizationArcData.js", "civilizationArcLayout.js",
-   "civilizationArcDraw.js", "civilizationArcNav.js"].forEach((f) =>
-    dom.window.eval(fs.readFileSync(path.join(root, "compile/assets", f), "utf8")));
-  dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
-
-  const nav = dom.window.document.querySelector(".civilization-arc-nav");
+  const { nav, svg } = mountArc();
   assert(nav, "arc nav did not mount");
-  assert(nav.querySelector("svg.arc-svg"), "SVG not rendered");
+  assert(svg, "SVG not rendered");
   assert.strictEqual(nav.querySelectorAll(".arc-track-band").length, 3, "expected 3 track bands");
   assert.strictEqual(nav.querySelectorAll(".arc-track-label").length, 3, "expected 3 track labels");
   assert(nav.querySelectorAll(".arc-subrow-label").length >= 4, "expected >=4 gate-family sub-row labels");
@@ -103,6 +108,15 @@ function assertRenderedDom() {
   assert(nav.querySelectorAll(".arc-marker").length > 0, "no item shapes produced");
   assert(nav.querySelector(".arc-now-line"), "now-line element missing");
 }
+
+const { test } = require("node:test");
+
+test('axis renders 15 sprint start-ticks and no era labels', () => {
+  const { svg } = mountArc();
+  assert.strictEqual(svg.querySelectorAll('.arc-sprint-tick-label').length, 15);
+  assert.strictEqual(svg.querySelectorAll('.arc-era-label').length, 0);
+  assert.ok(svg.querySelector('.arc-now-line')); // now-line preserved
+});
 
 const data = loadArcData();
 assertData(data);
