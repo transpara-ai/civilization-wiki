@@ -64,7 +64,7 @@ fetch origin (outbound only)
 - `site_affecting(paths: list[str]) -> (bool, list[str])` — pure. True if any path matches the allowlist; returns the matching paths (for the log reason).
   - **Allowlist (deploy when any match):** `wiki/` (any `.md`), `index.md`, `compile/build_site.py`, `compile/refresh.py`, `compile/stats.py`, `compile/inflight.py`, `compile/assets/` (any), `PROVENANCE.md`.
   - **Excluded (skip if *only* these):** `docs/`, `.github/`, `README.md`, `compile/test_*.py`, `compile/autodeploy.py`, `compile/systemd/`, the spec/plan docs, `compile/deploy-authorization*.json`.
-- `authorized(root, target_sha, now, ancestor_check) -> (ok: bool, reason: str)` — **`[2026-06-18]`** pure, deny-closed (see Authorization artifact). `ancestor_check` is an injected predicate `(sha) -> bool` so the gate is testable without a live repo.
+- `authorized(root, now, ancestor_check) -> (ok: bool, reason: str, sha: str | None)` — **`[2026-06-18]`** pure, deny-closed; reads + validates the artifact and, on grant, returns the validated `authorized_sha` (which *is* the deploy target). `ancestor_check` is an injected predicate `(sha) -> bool` so the gate is testable without a live repo.
 - `preflight(root, target_sha, ancestor_check) -> (ok: bool, reason: str)` — fail-closed technical gates 1–2 (dirty checkout; on-`main` + target legitimacy). Reads git state, no writes.
 - `deploy(root, target_sha, runner) -> (ok: bool, detail: str)` — `git merge --ff-only <target_sha>` then run `refresh.py` via the injected `runner`; returns False (no SHA advance) on any non-zero.
 - `write_deploy_status(root, blocked, reason, deployed_sha, target_sha, authorized, now, recent)` — writes `dist/deploy-status.json` (see Visibility).
@@ -90,7 +90,7 @@ Tracked file `compile/deploy-authorization.json` (a `df:`-style governance recor
 
 1. the file exists and parses as JSON;
 2. `df == "deploy-authorization"` and all six fields are present and well-typed;
-3. `authorized_sha == target_sha` (exact match — a 40-char hex SHA);
+3. `authorized_sha` is a 40-char hex SHA — it *is* the deploy target (`target = authorized_sha`), so there is no separate value to mismatch;
 4. `authorized_at <= now < expires_at` (both parse as ISO-8601; not-yet-valid and expired both refuse);
 5. `ancestor_check(authorized_sha)` is true — the SHA is a real ancestor-or-equal of `origin/main` (never deploy a SHA not in merged history).
 
@@ -144,7 +144,7 @@ Repo-tracked unit files under `compile/systemd/`:
 ## Tests (`python3 compile/test_autodeploy.py`, stdlib — matches `test_stats.py` / `test_inflight.py`)
 
 1. **site_affecting** — `wiki/x.md` / `index.md` / `compile/assets/style.css` / `compile/inflight.py` → deploy; `docs/y.md` / `.github/ci.yml` / `README.md` / `compile/test_stats.py` / `compile/deploy-authorization.json` only → skip; mixed (docs + wiki) → deploy.
-2. **authorized — full domain** (the core of the gate): valid+matching+unexpired+ancestor → grant; and each of {file absent, unreadable, malformed JSON, wrong `df`, missing field, SHA mismatch, expired, not-yet-valid (`authorized_at` in future), non-ancestor} → refuse with a distinct reason. Assert grant is reached on **exactly one** branch.
+2. **authorized — full domain** (the core of the gate): valid+unexpired+ancestor → grant (returns the SHA); and each of {file absent, unreadable, malformed JSON, wrong `df`, missing field, malformed (non-hex) SHA, expired, not-yet-valid (`authorized_at` in future), non-ancestor} → refuse with a distinct reason. Assert grant is reached on **exactly one** branch.
 3. **preflight** — dirty fixture → refuse; non-fast-forward / not-on-main fixture → refuse.
 4. **deploy-status JSON** — `write_deploy_status` produces the expected schema for blocked and clear; `since` carries over while blocked and resets when cleared.
 5. **build-fail no-advance** — `deploy()` whose injected `refresh.py` runner exits non-zero → returns False and the caller does **not** advance the SHA.
