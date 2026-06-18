@@ -97,3 +97,42 @@ def preflight(root, target_sha, ancestor_check):
     if not ancestor_check(target_sha):
         return (False, "target not an ancestor of origin/main")
     return (True, "preflight ok")
+
+
+RECENT_N = 10
+HISTORY_MAX = 200
+
+
+def write_deploy_status(root, *, blocked, reason, deployed_sha, target_sha,
+                        authorized_flag, now, recent, prior=None):
+    if blocked:
+        if prior and prior.get("blocked") and prior.get("reason") == reason and prior.get("since"):
+            since = prior["since"]
+        else:
+            since = _iso(now)
+    else:
+        since = None
+    status = {
+        "blocked": blocked, "reason": reason, "since": since,
+        "deployed_sha": deployed_sha, "target_sha": target_sha,
+        "authorized": authorized_flag, "checked": _iso(now),
+        "recent": recent[-RECENT_N:],
+    }
+    out = root / "dist" / "deploy-status.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(status, indent=2))
+    return status
+
+
+def append_deploy_history(root, event):
+    path = root / "compile" / ".deploy-history.json"
+    hist = []
+    if path.exists():
+        try:
+            hist = json.loads(path.read_text())
+        except Exception:
+            hist = []
+    hist.append(event)
+    hist = hist[-HISTORY_MAX:]
+    path.write_text(json.dumps(hist, indent=2))
+    return hist[-RECENT_N:]

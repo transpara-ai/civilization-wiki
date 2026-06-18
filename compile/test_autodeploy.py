@@ -132,6 +132,43 @@ def test_preflight_non_ancestor_and_off_main_refuse():
     print("ok test_preflight_non_ancestor_and_off_main_refuse")
 
 
+def test_status_since_carry_and_reset():
+    now1 = datetime.datetime(2026, 7, 1, 0, 0, tzinfo=UTC)
+    now2 = datetime.datetime(2026, 7, 1, 0, 2, tzinfo=UTC)
+    with tempfile.TemporaryDirectory() as d:
+        root = pathlib.Path(d)
+        s1 = ad.write_deploy_status(root, blocked=True, reason="unauthorized",
+                                    deployed_sha="x", target_sha="y",
+                                    authorized_flag=False, now=now1, recent=[])
+        assert s1["blocked"] and s1["since"] == ad._iso(now1)
+        # still blocked, same reason -> since carries over
+        s2 = ad.write_deploy_status(root, blocked=True, reason="unauthorized",
+                                    deployed_sha="x", target_sha="y",
+                                    authorized_flag=False, now=now2, recent=[], prior=s1)
+        assert s2["since"] == ad._iso(now1) and s2["checked"] == ad._iso(now2)
+        # cleared -> since None
+        s3 = ad.write_deploy_status(root, blocked=False, reason="ok",
+                                    deployed_sha="y", target_sha="y",
+                                    authorized_flag=True, now=now2, recent=[], prior=s2)
+        assert s3["blocked"] is False and s3["since"] is None
+        # written to dist/
+        assert json.loads((root / "dist" / "deploy-status.json").read_text())["blocked"] is False
+    print("ok test_status_since_carry_and_reset")
+
+
+def test_append_history_caps_and_returns_recent():
+    with tempfile.TemporaryDirectory() as d:
+        root = pathlib.Path(d)
+        (root / "compile").mkdir()
+        recent = []
+        for i in range(15):
+            recent = ad.append_deploy_history(root, {"sha": str(i), "at": "t", "result": "deployed"})
+        assert len(recent) == ad.RECENT_N
+        full = json.loads((root / "compile" / ".deploy-history.json").read_text())
+        assert full[-1]["sha"] == "14" and len(full) == 15
+    print("ok test_append_history_caps_and_returns_recent")
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items())
            if k.startswith("test_") and callable(v)]
