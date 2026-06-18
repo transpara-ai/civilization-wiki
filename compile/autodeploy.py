@@ -161,8 +161,19 @@ def write_deployed_sha(root, sha):
     (root / "compile" / ".deployed-sha").write_text(sha + "\n")
 
 
+def current_head(root):
+    """The checkout's HEAD sha (what the live dist/ was built from), or None on error."""
+    r = sh("git", "-C", str(root), "rev-parse", "HEAD")
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
 def diff_names(root, a, b):
+    """Changed paths between two shas, or None if `git diff` errors (unreadable/
+    ambiguous state — e.g. a corrupt or missing deployed-sha). None => caller REFUSES;
+    never treat a diff failure as 'no changes'."""
     r = sh("git", "-C", str(root), "diff", "--name-only", "%s..%s" % (a, b))
+    if r.returncode != 0:
+        return None
     return [x for x in r.stdout.splitlines() if x.strip()]
 
 
@@ -209,11 +220,16 @@ def run_tick(root, *, now, ancestor_check, runner, fetch=None, merge=None):
     deployed = read_deployed_sha(root)
     if not auth_ok:
         return status(True, "gate0: " + auth_reason, deployed, None, False)
-    if deployed is None:                       # first run: adopt target, do not deploy
-        write_deployed_sha(root, target)
-        return status(False, "initialized at authorized sha", target, target, True)
+    if deployed is None:                       # first run: record the CURRENT checkout HEAD
+        head = current_head(root)              # what the live dist/ was actually built from
+        if head is None:                       # unreadable git state -> refuse, no state written
+            return status(True, "first run: cannot read HEAD", None, target, False)
+        write_deployed_sha(root, head)
+        return status(False, "initialized at current HEAD %s" % head[:7], head, target, True)
 
     changed = diff_names(root, deployed, target)
+    if changed is None:                        # gate 4: diff/unreadable error -> refuse, no advance
+        return status(True, "git diff failed (unreadable/ambiguous state)", deployed, target, True)
     pf_ok, pf_reason = preflight(root, target, ancestor_check)
     action, reason = decide(deployed, target, auth_ok, auth_reason, changed, pf_ok, pf_reason)
 

@@ -224,6 +224,50 @@ def test_build_site_bakes_deploy_fetch():
     print("ok test_build_site_bakes_deploy_fetch")
 
 
+def test_run_tick_diff_error_refuses_and_no_advance():
+    """Blocker 1: a corrupt/stale deployed-sha makes `git diff` fail; that
+    ambiguous state must REFUSE (gate 4), never skip-and-advance the SHA."""
+    now = datetime.datetime(2026, 7, 1, tzinfo=UTC)
+    with tempfile.TemporaryDirectory() as d:
+        root, c1 = _git_repo(d)
+        bogus = "d" * 40                          # 40-hex but not a real object
+        ad.write_deployed_sha(root, bogus)        # corrupt/stale deployed-sha
+        _auth(root, authorized_sha=c1,
+              authorized_at="2026-06-18T00:00:00Z", expires_at="2026-12-31T00:00:00Z")
+        out = ad.run_tick(root, now=now, ancestor_check=lambda s: True,
+                          runner=lambda: 0,
+                          fetch=lambda: subprocess.CompletedProcess([], 0),
+                          merge=lambda: True)
+        assert out["blocked"] is True                       # refuse, not skip
+        assert ad.read_deployed_sha(root) == bogus          # NOT advanced
+    print("ok test_run_tick_diff_error_refuses_and_no_advance")
+
+
+def test_run_tick_first_run_inits_to_head_not_target():
+    """Blocker 2: first run (no state) must record the CURRENT checkout HEAD
+    (what dist/ was built from), not the authorized target — else a checkout
+    behind the authorized commit is silently marked deployed and never builds."""
+    now = datetime.datetime(2026, 7, 1, tzinfo=UTC)
+    with tempfile.TemporaryDirectory() as d:
+        root, c1 = _git_repo(d)
+        (root / "wiki").mkdir()
+        (root / "wiki" / "x.md").write_text("# x\n")
+        _git(root, "add", "-A")
+        _git(root, "commit", "-q", "-m", "c2 site-affecting")
+        c2 = _git(root, "rev-parse", "HEAD").stdout.strip()
+        _git(root, "reset", "-q", "--hard", c1)             # HEAD=c1; dist built from c1
+        # NO deployed-sha (first run); authorize the NEWER c2
+        _auth(root, authorized_sha=c2,
+              authorized_at="2026-06-18T00:00:00Z", expires_at="2026-12-31T00:00:00Z")
+        out = ad.run_tick(root, now=now, ancestor_check=lambda s: True,
+                          runner=lambda: 0,
+                          fetch=lambda: subprocess.CompletedProcess([], 0),
+                          merge=lambda: True)
+        assert out["blocked"] is False
+        assert ad.read_deployed_sha(root) == c1             # HEAD, NOT the target c2
+    print("ok test_run_tick_first_run_inits_to_head_not_target")
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items())
            if k.startswith("test_") and callable(v)]

@@ -57,7 +57,7 @@ fetch origin (outbound only)
                                         : keep old deployed-SHA + old dist (build failed) + log
 ```
 
-**The unit of truth is `compile/.deployed-sha` = the commit currently live.** A missed tick, reboot, or failed build self-heals on the next poll: it never double-deploys and never loses its place. First run with no state file: initialize it to the current `origin/main` and exit (assume the present `dist/` is from it).
+**The unit of truth is `compile/.deployed-sha` = the commit currently live.** A missed tick, reboot, or failed build self-heals on the next poll: it never double-deploys and never loses its place. First run with no state file: initialize it to the **current checkout `HEAD`** (the commit the present `dist/` was actually built from) and exit — never to `origin/main` or the authorized target, since those may be ahead of what is live; the gap is then evaluated and deployed on the next tick. A `git diff` error against a corrupt/missing deployed-sha is an unreadable/ambiguous state and **refuses** (gate 4), never a silent "no changes".
 
 ## `autodeploy.py` contract (functions, testable in isolation)
 
