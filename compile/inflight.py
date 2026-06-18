@@ -1,33 +1,38 @@
 #!/usr/bin/env python3
-"""Live in-flight layer for the Civilization Arc.
+"""Live in-flight overlay generator for the Civilization Arc.
 
-Collects open + recently-merged PRs across the dark-factory stack (+ civilization-wiki)
-via the `gh` CLI and writes dist/inflight.json — the live overlay the arc page fetches.
+Collects open and recently merged PRs across public GitHub dark-factory topic
+repos plus civilization-wiki, writes dist/inflight.json, and records omitted
+private repos and repo/query-level errors in the payload.
 
-Honors the standing rules, exactly like compile/refresh.py:
-  * No git commit/push/merge. Only writes local working files (dist/inflight.json).
-  * No secrets: `gh` uses the user's existing auth; the token is NEVER written to
-    inflight.json or shipped to the browser. inflight.json carries only PR metadata
-    (number, title, author login, url, state).
-  * Fail-loud: a gh failure for a repo is recorded, never silently treated as "no work".
+Like compile/refresh.py, this command does not commit, push, or merge. It uses
+the user's ambient gh auth and never writes tokens to inflight.json.
 """
-import json
-import subprocess
-import pathlib
+
 import datetime
+import json
+import pathlib
+import subprocess
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUT = ROOT / "dist" / "inflight.json"
-MERGED_WINDOW_DAYS = 7
-# Live items join the ongoing "stewardship" sprint (existing vocab → passes validateItems,
-# resolves the tooltip sprint label, adds no new axis tick).
+
+# Live items join the ongoing "stewardship" sprint so browser overlay code can
+# resolve the tooltip sprint label without adding a new axis tick.
 LIVE_SPRINT = "stewardship"
+MERGED_WINDOW_DAYS = 30
+PR_STATE_STATUS = {
+    "OPEN": "active",
+    "MERGED": "done",
+}
 
 
 def pr_to_item(pr, repo):
-    """Pure: one `gh pr list --json` row -> one derived arc item (no seq; browser assigns)."""
+    """Pure: one supported `gh pr list --json` row -> one derived arc item."""
     state = (pr.get("state") or "").upper()
-    status = "done" if state == "MERGED" else "active"
+    status = PR_STATE_STATUS.get(state)
+    if status is None:
+        return None
     author = ((pr.get("author") or {}).get("login")) or "unknown"
     number = pr.get("number")
     return {
@@ -47,24 +52,37 @@ def pr_to_item(pr, repo):
 
 
 def gh_json(args):
-    """Run `gh ... --json ...` and parse stdout. Raises on non-zero exit (fail-loud)."""
+    """Run `gh ... --json ...` and parse stdout. Raises on non-zero exit."""
     p = subprocess.run(["gh"] + args, capture_output=True, text=True)
     if p.returncode != 0:
         raise RuntimeError("gh %s failed: %s" % (" ".join(args), (p.stderr or "").strip()))
     return json.loads(p.stdout or "[]")
 
 
-def resolve_repos():
-    """Live dark-factory set (+ civilization-wiki), resolved from the GitHub topic — never hardcoded."""
+def error_summary(label, exc):
+    return "%s: %s" % (label, exc.__class__.__name__)
+
+
+def resolve_repo_access():
+    """Live dark-factory set (+ civilization-wiki), resolved from GitHub topics and visibility."""
     rows = gh_json(["repo", "list", "transpara-ai", "--no-archived", "--limit", "200",
-                    "--json", "name,repositoryTopics"])
-    repos = set()
+                    "--json", "name,repositoryTopics,isPrivate"])
+    repo_access = {}
     for r in rows:
         topics = [t.get("name") for t in (r.get("repositoryTopics") or [])]
         if "dark-factory" in topics:
-            repos.add(r["name"])
-    repos.add("civilization-wiki")
-    return sorted(repos)
+            repo_access[r["name"]] = (r.get("isPrivate") is False)
+    repo_access["civilization-wiki"] = True
+    return repo_access
+
+
+def resolve_repos():
+    """Live dark-factory set (+ civilization-wiki), resolved from GitHub topics."""
+    return sorted(resolve_repo_access())
+
+
+def public_repos(repo_access):
+    return sorted(repo for repo, is_public in repo_access.items() if is_public)
 
 
 _FIELDS = "number,title,author,url,state,isDraft"
@@ -75,14 +93,15 @@ def collect_items(repos):
     since = (datetime.date.today() - datetime.timedelta(days=MERGED_WINDOW_DAYS)).isoformat()
 
     def ingest(repo, label, args):
-        # Run one gh query and fold its PRs in. A failure is recorded per (repo, query)
+        # Run one gh query and fold its PRs in. A failure is recorded per query
         # and never discards rows already collected from the repo's other query.
         try:
             for pr in gh_json(args):
-                it = pr_to_item(pr, repo)
-                items_by_id[it["id"]] = it
-        except Exception as e:  # one bad query never zeroes the whole overlay
-            errors.append("%s %s: %s" % (repo, label, e))
+                item = pr_to_item(pr, repo)
+                if item is not None:
+                    items_by_id[item["id"]] = item
+        except Exception as e:
+            errors.append(error_summary("%s %s" % (repo, label), e))
 
     for repo in repos:
         slug = "transpara-ai/%s" % repo
@@ -96,17 +115,20 @@ def collect_items(repos):
 
 def main():
     try:
-        repos = resolve_repos()
+        repo_access = resolve_repo_access()
         repo_err = []
     except Exception as e:
-        repos, repo_err = ["civilization-wiki"], ["resolve_repos: %s" % e]
+        repo_access, repo_err = {"civilization-wiki": True}, [error_summary("resolve_repo_access", e)]
+    repos = public_repos(repo_access)
     items, errors = collect_items(repos)
     errors = repo_err + errors
+    omitted_private_repo_count = len(repo_access) - len(repos)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "generated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
         "window_days": MERGED_WINDOW_DAYS,
         "repos": repos,
+        "omitted_private_repo_count": omitted_private_repo_count,
         "errors": errors,
         "items": items,
     }

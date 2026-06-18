@@ -3,7 +3,7 @@ entity: Slice 1 Completion
 aliases: [round 6, v16, finished-unsignalled, first society to finish, grant-2 close]
 tier: arc
 status: compiled
-last_compiled: "2026-06-15"
+last_compiled: "2026-06-17"
 sources:
   - raw/transpara/dark-factory/reunification/2026-06-12-arc-state.md  # DF-REUNIFY-2026-06-12-ARC-STATE v0.3.0 — post-round-6 state table, v16 findings, Grant-2 accounting
   - raw/transpara/dark-factory/reunification/2026-06-11-slice-1-take-4-round-log.md  # DF-REUNIFY-2026-06-11-SLICE-1-TAKE-4-ROUND-LOG v0.5.0 — round 6 timeline, fix-set proofs, findings F1/F2/F3
@@ -98,7 +98,7 @@ The arc's close-class ladder:
 | Grant-1 (rounds 1–3) | v11, v12, v13 | Consumed; all closed stalled-by-machinery |
 | Grant-2 (rounds 4–6) | v14, v15, v16 | **Consumed; round 6 closed finished-unsignalled** |
 
-Grant-2 is exhausted. The hard stop was reached and **resolved on 2026-06-15**: the External Committee granted **Event-1** (v4.0 Gate-K interim loop hardening; decision *Notify*, `transpara-ai/docs#132`), not a new slice-1 grant. Gate-K itself remains defined and unsatisfied (AC-K5 data-handling attestation pending — docs#137).
+Grant-2 is exhausted. The hard stop was reached and **resolved on 2026-06-15**: the External Committee granted **Event-1** (v4.0 Gate-K interim loop hardening; decision *Notify*, `transpara-ai/docs#132`), not a new slice-1 grant. Gate K was later closed for pre-live sequencing by human waiver in `transpara-ai/docs#138`; production go-live, live data, protected runtime execution, value allocation, and autonomy increases remain blocked until revalidated.
 
 The v16 daemon (PID 821925/821927, ~0% CPU) had been held frozen by design pending that decision.
 

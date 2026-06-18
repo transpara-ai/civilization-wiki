@@ -113,6 +113,10 @@
     return text.charAt(0).toUpperCase() + text.slice(1);
   }
 
+  function fieldLabel(value) {
+    return String(value || "").replace(/[-_]+/g, " ");
+  }
+
   // The current focus = the blocked frontier:
   //   currentGate    — the blocked gate nearest the now-frontier (e.g. Gate-K)
   //   blockingWork   — the blocked derived-work item (e.g. N5)
@@ -361,8 +365,44 @@
     meta.appendChild(document.createTextNode(statusLabel(status)));
     panel.appendChild(meta);
 
+    if (item.boundary_status || item.go_live_revalidation) {
+      var boundary = htmlEl("p", "arc-detail-meta");
+      boundary.appendChild(htmlEl("span", "arc-detail-meta-key", "boundary "));
+      var parts = [];
+      if (item.boundary_status) parts.push(fieldLabel(item.boundary_status));
+      if (item.go_live_revalidation) parts.push("go-live revalidation " + fieldLabel(item.go_live_revalidation));
+      boundary.appendChild(document.createTextNode(parts.join(" · ")));
+      panel.appendChild(boundary);
+    }
+
     if (item.note) {
       panel.appendChild(htmlEl("p", "arc-detail-note", item.note));
+    }
+
+    if (Array.isArray(item.evidence_links) && item.evidence_links.length) {
+      var evidence = htmlEl("p", "arc-detail-evidence");
+      evidence.appendChild(htmlEl("span", "arc-detail-meta-key", "evidence "));
+      var renderedEvidence = 0;
+      item.evidence_links.forEach(function (entry) {
+        var node = null;
+        var safe = entry && safeHref(entry.href);
+        if (safe) {
+          var a = htmlEl("a", "arc-detail-evidence-link", entry.label || safe);
+          a.href = safe;
+          if (isExternalHref(safe)) {
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+          }
+          node = a;
+        } else if (entry && entry.label) {
+          node = document.createTextNode(entry.label);
+        }
+        if (!node) return;
+        if (renderedEvidence) evidence.appendChild(document.createTextNode(" · "));
+        evidence.appendChild(node);
+        renderedEvidence += 1;
+      });
+      if (renderedEvidence) panel.appendChild(evidence);
     }
 
     var detailSafe = safeHref(item.href);

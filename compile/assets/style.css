@@ -1252,6 +1252,17 @@ code,pre,.mono{font-family:var(--mono)}
   font-size:12.5px;
   line-height:1.5;
 }
+.arc-detail-evidence{
+  margin:8px 0 0;
+  color:var(--color-text-secondary);
+  font-size:12.5px;
+  line-height:1.5;
+}
+.arc-detail-evidence-link{
+  color:var(--arc-blue);
+  text-decoration:none;
+}
+.arc-detail-evidence-link:hover{text-decoration:underline}
 .arc-detail-link{
   display:inline-block;
   margin-top:10px;
