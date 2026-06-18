@@ -87,6 +87,51 @@ def test_example_template_is_inert():
     print("ok test_example_template_is_inert")
 
 
+def _git(root, *a):
+    return subprocess.run(["git", "-C", str(root)] + list(a),
+                          capture_output=True, text=True)
+
+
+def _git_repo(d):
+    """Init a temp git repo on main with one commit; return (root, sha)."""
+    root = pathlib.Path(d)
+    _git(root, "init", "-q", "-b", "main")
+    _git(root, "config", "user.email", "t@t")
+    _git(root, "config", "user.name", "t")
+    (root / "f.txt").write_text("v1\n")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "c1")
+    sha = _git(root, "rev-parse", "HEAD").stdout.strip()
+    return root, sha
+
+
+def test_preflight_clean_ok():
+    yes = lambda s: True
+    with tempfile.TemporaryDirectory() as d:
+        root, sha = _git_repo(d)
+        assert ad.preflight(root, sha, yes)[0] is True
+    print("ok test_preflight_clean_ok")
+
+
+def test_preflight_dirty_refuses():
+    yes = lambda s: True
+    with tempfile.TemporaryDirectory() as d:
+        root, sha = _git_repo(d)
+        (root / "f.txt").write_text("dirty\n")   # tracked modification
+        ok, reason = ad.preflight(root, sha, yes)
+        assert ok is False and "dirty" in reason
+    print("ok test_preflight_dirty_refuses")
+
+
+def test_preflight_non_ancestor_and_off_main_refuse():
+    with tempfile.TemporaryDirectory() as d:
+        root, sha = _git_repo(d)
+        assert ad.preflight(root, sha, lambda s: False)[0] is False   # not ancestor
+        _git(root, "checkout", "-q", "-b", "side")
+        assert ad.preflight(root, sha, lambda s: True)[0] is False     # off main
+    print("ok test_preflight_non_ancestor_and_off_main_refuse")
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items())
            if k.startswith("test_") and callable(v)]

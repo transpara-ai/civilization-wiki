@@ -82,3 +82,18 @@ def authorized(root, now, ancestor_check):
     if not ancestor_check(sha):
         return (False, "authorized_sha not an ancestor of origin/main", None)
     return (True, "authorized by %s" % a["authority"], sha)
+
+
+def preflight(root, target_sha, ancestor_check):
+    """Fail-closed technical gates 1-2: clean checkout + on-main + legit target."""
+    s = sh("git", "-C", str(root), "status", "--porcelain", "--untracked-files=no")
+    if s.returncode != 0:
+        return (False, "git status failed")
+    if s.stdout.strip():
+        return (False, "dirty serving checkout (tracked modifications)")
+    b = sh("git", "-C", str(root), "rev-parse", "--abbrev-ref", "HEAD")
+    if b.returncode != 0 or b.stdout.strip() != "main":
+        return (False, "HEAD not on main")
+    if not ancestor_check(target_sha):
+        return (False, "target not an ancestor of origin/main")
+    return (True, "preflight ok")
