@@ -11,7 +11,9 @@
     "Release & security gates (v3.9)",
   ];
 
-  var GEOM = { gutter: 190, marginRight: 28, rowH: 30, trackPad: 8, trackGap: 10, top: 64, axisH: 34, minCol: 34 };
+  // plotPad insets the first column from the gutter so markers never collide with
+  // the right-anchored track/sub-row labels that live in the gutter.
+  var GEOM = { gutter: 190, marginRight: 28, rowH: 30, trackPad: 8, trackGap: 10, top: 64, axisH: 56, plotPad: 18 };
 
   // Ordinal rank scale: distinct seq values are placed at equidistant columns
   // (NOT proportional to seq magnitude). Items sharing a seq share a column.
@@ -68,14 +70,18 @@
     var items = data.items || [];
     var domain = data.domain || { start: 0, end: 15 };
     var plotLeft = GEOM.gutter;
-    // distinct seq count drives the minimum content width (horizontal overflow).
-    var seqSet = {};
-    items.forEach(function (it) { if (it && typeof it.seq === "number") seqSet[it.seq] = 1; });
-    var distinctN = Object.keys(seqSet).length;
-    var minContent = plotLeft + Math.max(0, distinctN - 1) * GEOM.minCol + GEOM.marginRight;
-    var contentWidth = Math.max(width, minContent);
+    var plotStart = plotLeft + GEOM.plotPad;   // first column is inset from the gutter labels
+    // Presentational width: at zoom 1 the whole arc fits the frame (contentWidth ==
+    // frame width → no horizontal scroll). Zoom >1 widens content proportionally so
+    // the ordinal rank scale spreads distinct seqs across more space for detail (the
+    // frame then scrolls). Zoom <1 clamps to fit — content is never narrower than the
+    // frame. This replaces the old min-column-width overflow that forced scroll even
+    // on wide desktops.
+    var zoom = opts.zoom;
+    if (typeof zoom !== "number" || isNaN(zoom) || zoom < 1) zoom = 1;
+    var contentWidth = Math.round(width * zoom);
     var plotRight = contentWidth - GEOM.marginRight;
-    var sx = buildRankScale(items, plotLeft, plotRight);
+    var sx = buildRankScale(items, plotStart, plotRight);
 
     var groupBy = opts.groupBy || "tracks";
     var defs;
@@ -125,7 +131,7 @@
 
     var nowSeq = O.deriveNow(items);
     return {
-      tracks: tracks, scaleX: sx, domain: domain, plotLeft: plotLeft, plotRight: plotRight,
+      tracks: tracks, scaleX: sx, domain: domain, plotLeft: plotLeft, plotStart: plotStart, plotRight: plotRight,
       nowSeq: nowSeq, nowX: sx(nowSeq),
       sprintTicks: buildSprintTicks(data, items, sx),
       width: width, contentWidth: contentWidth, contentHeight: y + GEOM.axisH,
