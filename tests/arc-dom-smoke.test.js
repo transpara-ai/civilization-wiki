@@ -489,6 +489,25 @@ test('now-panel surfaces the Gate-K go-live hard stop even though the gate is no
   assert.match(np, /go-live/i, 'the go-live revalidation residual is named, not hidden behind a click');
 });
 
+test('standalone wheel: dominant-horizontal pans the frame (not hijacked into zoom); vertical zooms', () => {
+  const dom = new JSDOM('<!doctype html><div data-civilization-arc-nav data-arc-standalone="true"></div>', {
+    pretendToBeVisual: true, runScripts: "outside-only", url: "http://127.0.0.1:8787/civilization-arc.html",
+  });
+  ["civilizationOntology.js", "civilizationArcData.js", "civilizationArcLayout.js",
+   "civilizationArcDraw.js", "civilizationArcNav.js"].forEach((f) =>
+    dom.window.eval(fs.readFileSync(path.join(root, "compile/assets", f), "utf8")));
+  dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
+  const svg = dom.window.document.querySelector(".civilization-arc-nav svg.arc-svg");
+  // A dominant-horizontal trackpad gesture must fall through to scroll the frame, not zoom.
+  const hEvt = new dom.window.WheelEvent('wheel', { deltaX: 140, deltaY: 0, bubbles: true, cancelable: true });
+  svg.dispatchEvent(hEvt);
+  assert.strictEqual(hEvt.defaultPrevented, false, 'dominant-horizontal wheel must pan the frame, not be hijacked into zoom');
+  // A vertical wheel is still treated as zoom (prevents the page from scrolling).
+  const vEvt = new dom.window.WheelEvent('wheel', { deltaX: 0, deltaY: -140, bubbles: true, cancelable: true });
+  svg.dispatchEvent(vEvt);
+  assert.strictEqual(vEvt.defaultPrevented, true, 'vertical wheel is treated as zoom');
+});
+
 test('a backfilled date shows in the tooltip + a STRUCTURED detail-panel date line (with ref)', () => {
   const { nav, svg, dom } = mountArc();
   const gate = svg.querySelector('[data-arc-item="gate-k"]');

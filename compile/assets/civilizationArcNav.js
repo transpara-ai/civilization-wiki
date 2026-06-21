@@ -699,6 +699,10 @@
     // standalone page preventDefault stops the page from scrolling while zooming.
     svg.addEventListener("wheel", function (event) {
       if (root.getAttribute("data-arc-standalone") !== "true") return;
+      // Only a dominant-VERTICAL wheel zooms. A dominant-horizontal gesture (trackpad
+      // sideways pan) falls through so it scrolls the zoomed .arc-frame instead of being
+      // hijacked into a zoom-out.
+      if (!event.deltaY || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
       if (typeof event.preventDefault === "function") event.preventDefault();
       var dir = event.deltaY < 0 ? 1 : -1;
       var hi = s.maxZoom || ZOOM_ABS_MAX;
