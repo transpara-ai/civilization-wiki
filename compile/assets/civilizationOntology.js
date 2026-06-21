@@ -98,16 +98,16 @@
   // present. Allowlist-not-denylist: membership in REPO_CANON is the proven branch; any
   // repo not on the list is named, never bucketed, never silently dropped.
   function groupByRepo(items) {
-    var canon = {};                          // collection repo → items[]
+    var canon = Object.create(null);          // collection repo → items[]
     REPO_CANON.forEach(function (r) { canon[r] = []; });
-    var outsideMap = {};                      // outside repo (or "(no repo)") → items[]
+    var outsideMap = Object.create(null);     // outside repo (or "(no repo)") → items[]
     function pushOutside(name, it) {
       if (!outsideMap[name]) outsideMap[name] = [];
       outsideMap[name].push(it);
     }
     (items || []).forEach(function (it) {
       var repos = (it && Array.isArray(it.repo)) ? it.repo : [];
-      var seen = {}, matchedAny = false;
+      var seen = Object.create(null), matchedAny = false;
       repos.forEach(function (r) {
         if (seen[r]) return;                 // dedupe repeated repos within one item
         seen[r] = true;

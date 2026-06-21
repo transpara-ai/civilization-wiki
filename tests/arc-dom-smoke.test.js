@@ -502,6 +502,10 @@ test('standalone wheel: dominant-horizontal pans the frame (not hijacked into zo
   const hEvt = new dom.window.WheelEvent('wheel', { deltaX: 140, deltaY: 0, bubbles: true, cancelable: true });
   svg.dispatchEvent(hEvt);
   assert.strictEqual(hEvt.defaultPrevented, false, 'dominant-horizontal wheel must pan the frame, not be hijacked into zoom');
+  // At Fit, a zoom-out gesture cannot change zoom and must fall through so the page can scroll.
+  const lowerBoundEvt = new dom.window.WheelEvent('wheel', { deltaX: 0, deltaY: 140, bubbles: true, cancelable: true });
+  svg.dispatchEvent(lowerBoundEvt);
+  assert.strictEqual(lowerBoundEvt.defaultPrevented, false, 'wheel down at Fit must scroll the page, not be swallowed');
   // A vertical wheel is still treated as zoom (prevents the page from scrolling).
   const vEvt = new dom.window.WheelEvent('wheel', { deltaX: 0, deltaY: -140, bubbles: true, cancelable: true });
   svg.dispatchEvent(vEvt);

@@ -111,6 +111,22 @@ test('groupBy repo: a repo OUTSIDE the collection gets its OWN named lane, tagge
   assert.strictEqual(lanes[lanes.length - 1].lane, 'ghost-repo', 'outside lanes sort after the collection');
 });
 
+test('groupBy repo: prototype-named outside repos still get named lanes', () => {
+  const items = [
+    { id: 'ctor', repo: ['constructor'] },
+    { id: 'toString', repo: ['toString'] },
+    { id: 'proto', repo: ['__proto__'] },
+  ];
+  const lanes = O.groupBy(items, 'repo');
+  ['constructor', 'toString', '__proto__'].forEach((repo) => {
+    const lane = lanes.find(l => l.lane === repo);
+    assert.ok(lane, repo + ' must appear as its own outside lane');
+    assert.deepStrictEqual(lane.items.map(i => i.repo[0]), [repo]);
+    assert.strictEqual(lane.group, 'outside');
+  });
+  assert.strictEqual(lanes.find(l => l.lane === '(no repo)'), undefined);
+});
+
 test('groupBy repo: the outside group is ABSENT when every repo is in the collection', () => {
   const lanes = O.groupBy([{ id: 'a', repo: ['site'] }, { id: 'b', repo: ['civilization-wiki'] }], 'repo');
   assert.ok(!lanes.some(l => l.group === 'outside'), 'no outside lanes');

@@ -703,11 +703,15 @@
       // sideways pan) falls through so it scrolls the zoomed .arc-frame instead of being
       // hijacked into a zoom-out.
       if (!event.deltaY || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
-      if (typeof event.preventDefault === "function") event.preventDefault();
       var dir = event.deltaY < 0 ? 1 : -1;
       var hi = s.maxZoom || ZOOM_ABS_MAX;
-      var nz = clampZoom((s.zoom || 1) + dir * ZOOM_STEP, hi);
-      if (nz !== s.zoom) { s.zoom = nz; writeZoom(nz); render(root, s.data); }
+      var current = s.zoom || 1;
+      var nz = clampZoom(current + dir * ZOOM_STEP, hi);
+      if (nz === current) return;
+      if (typeof event.preventDefault === "function") event.preventDefault();
+      s.zoom = nz;
+      writeZoom(nz);
+      render(root, s.data);
     }, { passive: false });
 
     svg.addEventListener("click", function (event) {
