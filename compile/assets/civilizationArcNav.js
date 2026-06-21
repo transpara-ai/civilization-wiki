@@ -178,27 +178,28 @@
     var items = (data && data.items) || [];
     var nowSeq = (O && O.deriveNow) ? O.deriveNow(items) : 0;
 
-    function pickBlocked(pred) {
+    function pick(pred) {
       var atFrontier = null;
-      var anyBlocked = null;
+      var any = null;
       for (var i = 0; i < items.length; i++) {
         var it = items[i];
-        if (!it || !it.blocked || !pred(it)) continue;
-        if (!anyBlocked || (typeof it.seq === "number" && it.seq > anyBlocked.seq)) {
-          anyBlocked = it;
-        }
+        if (!it || !pred(it)) continue;
+        if (!any || (typeof it.seq === "number" && it.seq > any.seq)) any = it;
         if (typeof it.seq === "number" && it.seq <= nowSeq + 1e-9) {
           if (!atFrontier || it.seq > atFrontier.seq) atFrontier = it;
         }
       }
-      return atFrontier || anyBlocked;
+      return atFrontier || any;
     }
 
     return {
       nowSeq: nowSeq,
-      currentGate: pickBlocked(function (it) { return it.type === "gate"; }),
-      blockingWork: pickBlocked(function (it) {
-        return it.type === "work" && it.provenance === "derived";
+      currentGate: pick(function (it) { return it.blocked && it.type === "gate"; }),
+      // Post-waiver: a closed gate can still hold the go-live hard stop. Surface it so the
+      // focus panel never reads "all clear" while go_live_revalidation is blocked.
+      goLiveGate: pick(function (it) { return it.type === "gate" && it.go_live_revalidation === "blocked"; }),
+      blockingWork: pick(function (it) {
+        return it.blocked && it.type === "work" && it.provenance === "derived";
       }),
     };
   }
@@ -382,6 +383,7 @@
 
     var focus = currentFocus(data);
     var gate = focus.currentGate;
+    var goLive = focus.goLiveGate;
 
     var head = htmlEl("div", "arc-now-head");
     if (gate) {
@@ -389,6 +391,14 @@
       head.appendChild(htmlEl("span", "arc-badge arc-badge-blocked", "blocked"));
       panel.appendChild(head);
       panel.appendChild(htmlEl("p", "arc-now-label", gate.label || ""));
+    } else if (goLive) {
+      // No fully-blocked gate, but a closed gate still holds the go-live hard stop
+      // (go_live_revalidation: "blocked"). Surface it as the focus, not "all clear".
+      head.appendChild(htmlEl("span", "arc-now-code", goLive.code || goLive.id || "gate"));
+      head.appendChild(htmlEl("span", "arc-badge arc-badge-blocked", "go-live blocked"));
+      panel.appendChild(head);
+      panel.appendChild(htmlEl("p", "arc-now-label", goLive.label || ""));
+      panel.appendChild(htmlEl("p", "arc-now-boundary", "go-live revalidation blocked (pre-live work closed by waiver)"));
     } else {
       head.appendChild(htmlEl("span", "arc-now-code", "no blocked gate"));
       panel.appendChild(head);

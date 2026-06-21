@@ -328,25 +328,33 @@
   function drawDeps(svg, layout, edges, selectedId) {
     if (!svg || !layout || !edges || !edges.length) return;
     var doc = svg.ownerDocument;
-    var pos = {};
+    var pos = {};   // id -> [{x,y}, ...]; an item can render in several lanes (e.g. Repo view)
     (layout.tracks || []).forEach(function (t) {
       (t.rows || []).forEach(function (r) {
         (r.items || []).forEach(function (p) {
-          if (p && p.item && p.item.id != null) pos[p.item.id] = { x: num(p.x), y: num(p.y) };
+          if (p && p.item && p.item.id != null) {
+            (pos[p.item.id] = pos[p.item.id] || []).push({ x: num(p.x), y: num(p.y) });
+          }
         });
       });
     });
     edges.forEach(function (e) {
-      var a = pos[e.from], b = pos[e.to];
-      if (!a || !b) return;
+      var froms = pos[e.from], tos = pos[e.to];
+      if (!froms || !tos) return;
       var kind = (e.to === selectedId) ? "precedent" : "antecedent";
       var stroke = (kind === "precedent") ? "#6cb6ff" : "#e7bf64";
-      svg.appendChild(svgEl(doc, "line", {
-        "class": "arc-dep-line arc-dep-" + kind,
-        x1: a.x, y1: a.y, x2: b.x, y2: b.y,
-        stroke: stroke, "stroke-width": 1.5, "stroke-dasharray": "5 4",
-        opacity: 0.9, "vector-effect": "non-scaling-stroke",
-      }));
+      // Connect every placement pair so each visible copy of a duplicated (multi-lane)
+      // item is anchored — never collapsed to a single "last-seen" copy.
+      froms.forEach(function (a) {
+        tos.forEach(function (b) {
+          svg.appendChild(svgEl(doc, "line", {
+            "class": "arc-dep-line arc-dep-" + kind,
+            x1: a.x, y1: a.y, x2: b.x, y2: b.y,
+            stroke: stroke, "stroke-width": 1.5, "stroke-dasharray": "5 4",
+            opacity: 0.9, "vector-effect": "non-scaling-stroke",
+          }));
+        });
+      });
     });
   }
 

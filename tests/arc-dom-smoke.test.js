@@ -466,6 +466,29 @@ test('selecting an item draws dashed dependency lines (both directions) + lists 
   assert.strictEqual(svg.querySelectorAll('.arc-dep-line').length, 0, "lines clear on deselect");
 });
 
+test('drawDeps anchors a line to EVERY placement of a duplicated multi-lane item (repo view)', () => {
+  const D = require('../compile/assets/civilizationArcDraw.js');
+  const doc = new JSDOM('<!doctype html>').window.document;
+  const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  // Item X is rendered in TWO lanes (y=10 and y=50); item Y once (y=30). X depends on Y.
+  const layout = { tracks: [
+    { rows: [{ items: [{ item: { id: 'X' }, x: 100, y: 10 }, { item: { id: 'Y' }, x: 60, y: 30 }] }] },
+    { rows: [{ items: [{ item: { id: 'X' }, x: 100, y: 50 }] }] },
+  ] };
+  D.drawDeps(svg, layout, [{ from: 'Y', to: 'X' }], 'X');
+  const lines = [...svg.querySelectorAll('.arc-dep-line')];
+  const ys = new Set(lines.flatMap(l => [Number(l.getAttribute('y1')), Number(l.getAttribute('y2'))]));
+  assert.ok(ys.has(10) && ys.has(50),
+    'a dep line must reach BOTH copies of X (y=10 and y=50), not just the last; got ' + [...ys].join(','));
+});
+
+test('now-panel surfaces the Gate-K go-live hard stop even though the gate is no longer blocked', () => {
+  const { nav } = mountArc();
+  const np = nav.querySelector('.arc-now-panel').textContent;
+  assert.match(np, /Gate-K/, 'the go-live hard-stop gate is surfaced in the focus panel');
+  assert.match(np, /go-live/i, 'the go-live revalidation residual is named, not hidden behind a click');
+});
+
 test('a backfilled date shows in the tooltip + a STRUCTURED detail-panel date line (with ref)', () => {
   const { nav, svg, dom } = mountArc();
   const gate = svg.querySelector('[data-arc-item="gate-k"]');
