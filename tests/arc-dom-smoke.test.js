@@ -547,14 +547,21 @@ test('a backfilled date shows in the tooltip + a STRUCTURED detail-panel date li
   assert.match(dateLine.textContent, /docs#138/, 'date line carries the provenance ref');
 });
 
-test('an undated item shows NO date line in tooltip or detail — graceful absence', () => {
+test('every item shows a date line — explicit placeholder when undated, never blank, never fabricated', () => {
+  // Reverses the earlier "graceful absence" rule: the requirement is that EVERYTHING
+  // carries a date line. origin-signal is a reconstructed beat with no backfilled date,
+  // so it must show an explicit placeholder — not a blank, and not an invented ISO date.
   const { nav, svg, dom } = mountArc();
-  // origin-signal is a reconstructed beat with no date; its detail must not fabricate one.
   const m = svg.querySelector('[data-arc-item="origin-signal"]');
   m.dispatchEvent(new dom.window.MouseEvent('mouseover', { bubbles: true }));
-  assert.doesNotMatch(nav.querySelector('.arc-tooltip').textContent, /date ·/, 'no tooltip date for an undated item');
+  const tip = nav.querySelector('.arc-tooltip').textContent;
+  assert.match(tip, /date ·/, 'tooltip always carries a date line');
+  assert.doesNotMatch(tip, /date · \d{4}-\d{2}-\d{2}/, 'must NOT fabricate an ISO date for an undated item');
   m.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
-  assert.strictEqual(nav.querySelector('.arc-detail-date'), null, 'no detail date line for an undated item');
+  const dateLine = nav.querySelector('.arc-detail-date');
+  assert(dateLine, 'detail panel ALWAYS has a .arc-detail-date line');
+  assert.match(dateLine.textContent, /date\b/, 'date line is labelled');
+  assert.doesNotMatch(dateLine.textContent, /\d{4}-\d{2}-\d{2}/, 'undated item shows no fabricated ISO date');
 });
 
 test('Actor toggle is disabled when no item carries an author (live overlay parked)', () => {
@@ -563,6 +570,67 @@ test('Actor toggle is disabled when no item carries an author (live overlay park
   assert(actor, "actor button present");
   assert.strictEqual(actor.disabled, true, "actor button must be disabled with no actor data");
   assert(actor.classList.contains('arc-group-btn-disabled'), "disabled class applied");
+});
+
+// A live inflight payload of N items, each attributed to the given author(s) — exercises
+// the actor gate the way the real overlay does (it attributes every in-flight PR to an author).
+function livePayloadWithAuthors(authors) {
+  return {
+    generated: "2026-06-17 14:00", window_days: 30, repos: ["hive"], errors: [],
+    items: authors.map(function (a, i) {
+      return { id: "pr-actor-" + i, code: "pr#" + i, type: "work", label: "live work",
+        status: "active", blocked: false, provenance: "derived", repo: ["hive"],
+        sprint: "stewardship", href: "https://github.com/transpara-ai/hive/pull/" + (i + 1),
+        author: a, note: "open · @" + a };
+    }),
+  };
+}
+
+test('Actor toggle STAYS disabled with a single distinct actor (the operator only)', async () => {
+  const dom = mountWithFetch(livePayloadWithAuthors(['MichaelSaucier', 'MichaelSaucier']));
+  await new Promise((r) => setTimeout(r, 0));
+  const actor = dom.window.document.querySelector('[data-arc-group="actor"]');
+  assert.strictEqual(actor.disabled, true, 'one actor = one useless lane → still disabled');
+  assert(actor.classList.contains('arc-group-btn-disabled'));
+});
+
+test('Actor toggle ENABLES once >= 2 distinct actors exist', async () => {
+  const dom = mountWithFetch(livePayloadWithAuthors(['guardian', 'implementer']));
+  await new Promise((r) => setTimeout(r, 0));
+  const actor = dom.window.document.querySelector('[data-arc-group="actor"]');
+  assert.strictEqual(actor.disabled, false, 'multiple actors → actor view is meaningful');
+  assert(!actor.classList.contains('arc-group-btn-disabled'));
+});
+
+test('row-name gutter is a pinned layer that tracks frame scroll (sticky row names)', () => {
+  const { nav, svg, dom } = mountArc();
+  const gutter = svg.querySelector('.arc-gutter');
+  assert(gutter, 'a dedicated pinned gutter <g> must render');
+  assert(gutter.querySelector('.arc-gutter-bg'), 'opaque backing rect present (markers must not bleed through)');
+  assert(gutter.querySelector('.arc-track-label'), 'track labels live INSIDE the pinned gutter layer');
+  assert(gutter.querySelector('.arc-subrow-label'), 'sub-row labels live inside the pinned gutter layer');
+  // Drawn last → paints above the markers.
+  assert.strictEqual(svg.children[svg.children.length - 1], gutter, 'gutter paints on top (appended last)');
+  // jsdom has no layout, so drive scrollLeft directly + fire scroll → the gutter must offset to match.
+  const frame = nav.querySelector('.arc-frame');
+  frame.scrollLeft = 137;
+  frame.dispatchEvent(new dom.window.Event('scroll'));
+  assert.strictEqual(gutter.getAttribute('transform'), 'translate(137,0)', 'gutter pins to viewport-left on horizontal scroll');
+});
+
+test('legend renders the symbol/colour key from data.legendItems (regression: it was missing)', () => {
+  const { nav } = mountArc();
+  const legend = nav.querySelector('.arc-legend');
+  assert(legend, 'legend panel must render');
+  assert.strictEqual(legend.hidden, false, 'legend must be visible when legendItems exist');
+  const rows = [...legend.querySelectorAll('.arc-legend-item')];
+  const legendItems = loadArcData().legendItems;
+  assert.strictEqual(rows.length, legendItems.length, 'one legend row per legendItem (got ' + rows.length + ')');
+  // The swatch must carry the shape-specific class so the colour/shape actually styles.
+  assert(legend.querySelector('.arc-legend-swatch.arc-legend-diamond'), 'gate diamond swatch present');
+  assert(legend.querySelector('.arc-legend-swatch.arc-legend-risk-high'), 'risk-high swatch present');
+  assert(legend.querySelector('.arc-legend-swatch.arc-legend-line'), 'critical-path line swatch present');
+  assert.match(legend.textContent, /Milestone \/ gate/, 'legend labels render');
 });
 
 const data = loadArcData();

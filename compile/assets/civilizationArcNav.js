@@ -143,6 +143,21 @@
     return String(value || "").replace(/[-_]+/g, " ");
   }
 
+  // Every item must surface a date line (tooltip + detail). A real ISO date when known;
+  // otherwise an explicit, honest placeholder keyed off the lifecycle state — never a
+  // fabricated date and never a blank. (This reverses the earlier "graceful absence"
+  // behaviour, per the requirement that everything carry a date.) The remaining undated
+  // DONE items are a separate provenance backfill, not a render concern.
+  function dateText(item) {
+    if (item && typeof item.date === "string" && item.date) return item.date;
+    var st = item ? (item.blocked ? "blocked" : item.status) : null;
+    if (st === "active") return "in progress — not yet dated";
+    if (st === "planned") return "planned — not started";
+    if (st === "blocked") return "blocked — not dated";
+    if (st === "future") return "future — not scheduled";
+    return "undated"; // done-but-undated (backfill pending) or unknown state
+  }
+
   function progressEvidence() {
     return (typeof window !== "undefined") ? window.CIVILIZATION_PROGRESS_EVIDENCE : null;
   }
@@ -222,7 +237,7 @@
   function ensureScaffold(root) {
     root._arc = root._arc || { collapsed: {}, selectedId: null, groupBy: "tracks", zoom: readZoom() };
     var s = root._arc;
-    if (s.scaffolded && s.frame && s.svg && s.nowPanel && s.detailPanel && s.tooltip && s.toolbar && s.progressPanel) {
+    if (s.scaffolded && s.frame && s.svg && s.nowPanel && s.detailPanel && s.tooltip && s.toolbar && s.progressPanel && s.legend) {
       return s;
     }
 
@@ -260,6 +275,12 @@
     var progressPanel = htmlEl("section", "arc-progress-panel");
     progressPanel.setAttribute("aria-label", "Progress evidence snapshot");
 
+    // Symbol/colour key. Driven by data.legendItems; rebuilt each render. Sits under
+    // the chart so the marker vocabulary (gates, chips, dependency lines) is readable
+    // without guessing. (Regression: the arc shipped with the data + CSS but no render.)
+    var legend = htmlEl("section", "arc-legend");
+    legend.setAttribute("aria-label", "Legend — chart symbols and colours");
+
     var toolbar = htmlEl("div", "arc-toolbar");
     toolbar.setAttribute("role", "group");
     toolbar.setAttribute("aria-label", "Group the arc by");
@@ -291,7 +312,7 @@
     zoomWrap.append(zoomOut, zoomReadout, zoomIn);
     toolbar.appendChild(zoomWrap);
 
-    root.append(toolbar, frame, panels, progressPanel);
+    root.append(toolbar, frame, legend, panels, progressPanel);
 
     s.scaffolded = true;
     s.toolbar = toolbar;
@@ -303,11 +324,23 @@
     s.nowPanel = nowPanel;
     s.detailPanel = detailPanel;
     s.progressPanel = progressPanel;
+    s.legend = legend;
     s.standalone = standalone;
     return s;
   }
 
   // Reflect the active grouping on the toolbar buttons.
+  // Distinct non-empty actors among items. The "actor" grouping is only meaningful with
+  // >= 2 (one actor = a single useless lane); used to gate the toolbar button and to fall
+  // back off a stale "actor" selection. Deny-closed: non-string/empty authors are ignored.
+  function distinctActorCount(items) {
+    var set = {};
+    (items || []).forEach(function (it) {
+      if (it && typeof it.author === "string" && it.author) set[it.author] = 1;
+    });
+    return Object.keys(set).length;
+  }
+
   function updateToolbar(s) {
     if (!s || !s.toolbar) return;
     var cur = s.groupBy || "tracks";
@@ -317,18 +350,19 @@
       b.classList.toggle("arc-group-btn-active", on);
       b.setAttribute("aria-pressed", on ? "true" : "false");
     });
-    // Actor grouping needs per-item authors; baked items have none (live overlay is
-    // parked), so disable the toggle when no actor data exists instead of showing a
-    // useless "(unknown)" lane.
-    var actorItems = (s.data && s.data.items) || [];
-    var hasActors = actorItems.some(function (it) { return it && it.author; });
+    // Actor grouping is only meaningful with MULTIPLE distinct actors. Right now the sole
+    // actor is the operator (the live overlay attributes every in-flight PR to one author),
+    // so a single-actor view is one useless lane. Gate on >= 2 distinct actors; it lights up
+    // once real role ownership (Guardian, Implementer, Archivist, CTO, Spawner, …) lands.
+    // Deny-closed: default disabled.
+    var multiActor = distinctActorCount((s.data && s.data.items) || []) >= 2;
     var actorBtn = s.toolbar.querySelector('[data-arc-group="actor"]');
     if (actorBtn) {
-      actorBtn.disabled = !hasActors;
-      actorBtn.classList.toggle("arc-group-btn-disabled", !hasActors);
-      actorBtn.setAttribute("title", hasActors
+      actorBtn.disabled = !multiActor;
+      actorBtn.classList.toggle("arc-group-btn-disabled", !multiActor);
+      actorBtn.setAttribute("title", multiActor
         ? "Group by actor"
-        : "Actor view needs live / ownership data (none loaded yet)");
+        : "Actor view activates with multiple actors (Guardian, Implementer, Archivist, …) — only one actor so far");
     }
     if (s.zoomReadout) {
       var z = s.zoom || 1;
@@ -354,7 +388,7 @@
     if (sprintLabel) tip.appendChild(htmlEl("div", "arc-tooltip-meta", "sprint · " + sprintLabel));
     var ord = s.ordinalById && s.ordinalById[item.id];
     if (ord) tip.appendChild(htmlEl("div", "arc-tooltip-meta", "step " + ord + " of " + s.itemCount));
-    if (item.date) tip.appendChild(htmlEl("div", "arc-tooltip-meta", "date · " + item.date)); // reserved for date-backfill follow-up
+    tip.appendChild(htmlEl("div", "arc-tooltip-meta", "date · " + dateText(item))); // every item carries a date line
     if (item.provenance) tip.appendChild(htmlEl("div", "arc-tooltip-meta", "provenance · " + item.provenance));
     if (item.author) tip.appendChild(htmlEl("div", "arc-tooltip-meta", "actor · @" + item.author));
     // No clickable link in the tooltip — pointer-events:none on .arc-tooltip makes
@@ -515,14 +549,14 @@
       panel.appendChild(boundary);
     }
 
-    // Backfilled completion date + its provenance ref (present only on dated done items;
-    // see the date-ownership backfill). Absent items render no date line — graceful.
-    if (item.date) {
-      var dateMeta = htmlEl("p", "arc-detail-meta arc-detail-date");
-      dateMeta.appendChild(htmlEl("span", "arc-detail-meta-key", "date "));
-      dateMeta.appendChild(document.createTextNode(item.date + (item.ref ? " · " + item.ref : "")));
-      panel.appendChild(dateMeta);
-    }
+    // Every item carries a date line. A real ISO date (+ provenance ref) when known; an
+    // explicit lifecycle placeholder otherwise — never blank, never fabricated.
+    var dateMeta = htmlEl("p", "arc-detail-meta arc-detail-date");
+    dateMeta.appendChild(htmlEl("span", "arc-detail-meta-key", "date "));
+    var hasRealDate = typeof item.date === "string" && item.date;
+    dateMeta.appendChild(document.createTextNode(
+      dateText(item) + (hasRealDate && item.ref ? " · " + item.ref : "")));
+    panel.appendChild(dateMeta);
 
     if (item.note) {
       panel.appendChild(htmlEl("p", "arc-detail-note", item.note));
@@ -685,6 +719,43 @@
     }
   }
 
+  // ---- legend ---------------------------------------------------------------
+
+  // Allowlisted swatch shapes — only classes that exist in style.css are emitted; an
+  // unknown/garbage shape falls back to the base swatch (never an arbitrary injected
+  // class). Mirrors the .arc-legend-* rules.
+  var LEGEND_SHAPES = {
+    "rect": 1, "small-rect": 1, "tick": 1, "diamond": 1, "risk-high": 1,
+    "risk-watch": 1, "decision-chip": 1, "circle": 1, "arrow": 1, "line": 1,
+    "hatch": 1, "faded": 1,
+  };
+
+  // Render the symbol/colour key from data.legendItems ({key,label,shape}); each row is
+  // a styled swatch + label. Idempotent: cleared and rebuilt each render. Empty/absent
+  // legendItems -> the panel is hidden rather than an empty bordered box.
+  function renderLegend(root, data) {
+    var s = root._arc;
+    var panel = s && s.legend;
+    if (!panel) return;
+    clearNode(panel);
+    var items = (data && data.legendItems) || [];
+    if (!items.length) { panel.hidden = true; return; }
+    panel.hidden = false;
+    panel.appendChild(htmlEl("h3", "", "Legend"));
+    var list = htmlEl("ul", "arc-legend-list");
+    items.forEach(function (it) {
+      if (!it) return;
+      var li = htmlEl("li", "arc-legend-item");
+      var shape = (typeof it.shape === "string" && LEGEND_SHAPES[it.shape]) ? it.shape : "rect";
+      var swatch = htmlEl("span", "arc-legend-swatch arc-legend-" + shape);
+      swatch.setAttribute("aria-hidden", "true");
+      li.appendChild(swatch);
+      li.appendChild(htmlEl("span", "arc-legend-label", it.label == null ? "" : String(it.label)));
+      list.appendChild(li);
+    });
+    panel.appendChild(list);
+  }
+
   // ---- event wiring (delegated, attached once) ------------------------------
 
   function closestArcItem(target) {
@@ -818,6 +889,25 @@
     s.wired = true;
   }
 
+  // ---- pinned gutter (sticky row-name column) -------------------------------
+
+  // Keep the frozen row-name column aligned to the viewport's left edge: translate the gutter
+  // layer by the frame's current scrollLeft. At zoom>1 the SVG renders 1 user-unit per px, so
+  // scrollLeft maps 1:1; at Fit (no horizontal scroll) scrollLeft is 0 → a no-op.
+  function pinGutter(s) {
+    if (!s || !s.gutter || !s.frame) return;
+    var x = s.frame.scrollLeft || 0;
+    s.gutter.setAttribute("transform", "translate(" + x + ",0)");
+  }
+  // Wire the frame's scroll → re-pin, once per root. Reads root._arc fresh each event so it
+  // always pins the current render's gutter group.
+  function wireGutterScroll(root) {
+    var s = root._arc;
+    if (!s || s.gutterScrollWired || !s.frame) return;
+    s.frame.addEventListener("scroll", function () { pinGutter(root._arc); }, { passive: true });
+    s.gutterScrollWired = true;
+  }
+
   // ---- render (idempotent) --------------------------------------------------
 
   function render(root, data) {
@@ -829,6 +919,12 @@
     var s = ensureScaffold(root);
     s.data = data;                 // current data (baked, or merged-with-live overlay)
     s.byId = indexItems(data);     // re-index each render so live markers stay interactive
+
+    // Fail-safe: never sit on the actor grouping without real multi-actor data (e.g. a live
+    // reload that drops back to a single author). Fall back to the default tracks view.
+    if (s.groupBy === "actor" && distinctActorCount((data.items) || []) < 2) {
+      s.groupBy = "tracks";
+    }
 
     if (!s.ordinalById) {
       s.ordinalById = {};
@@ -896,6 +992,14 @@
     }
     Draw.drawMarkers(svg, layout, s);
 
+    // Pinned row-name gutter — drawn LAST so it paints above the markers, then offset to the
+    // current scroll so it stays put as the frame scrolls horizontally (sticky row names).
+    if (Draw.drawGutter) {
+      s.gutter = Draw.drawGutter(svg, layout, s);
+      pinGutter(s);
+      wireGutterScroll(root);
+    }
+
     // Mark the selected item's group for the selection treatment + reflect the
     // selection on the marker's aria state (the group class is also set by the
     // draw module, but it only knows state.selectedId — keep them in sync here
@@ -912,6 +1016,7 @@
     updateToolbar(s);
     renderNowPanel(root, data);
     renderDetailPanel(root, data);
+    renderLegend(root, data);
     renderProgressEvidence(root);
 
     wireEvents(root, data);
