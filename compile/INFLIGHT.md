@@ -17,6 +17,9 @@ dark-factory repo set is resolved live from the GitHub `dark-factory` topic (nev
 Installed as a user timer mirroring `wiki-autodeploy`. The unit files live in
 `compile/systemd/wiki-inflight.{service,timer}`:
 
+    systemctl --user disable --now civwiki-inflight.timer 2>/dev/null || true
+    mkdir -p ~/.config/systemd/user/retired-civwiki-units
+    mv -n ~/.config/systemd/user/civwiki-inflight.* ~/.config/systemd/user/retired-civwiki-units/ 2>/dev/null || true
     cp compile/systemd/wiki-inflight.{service,timer} ~/.config/systemd/user/
     systemctl --user daemon-reload
     systemctl --user enable --now wiki-inflight.timer
