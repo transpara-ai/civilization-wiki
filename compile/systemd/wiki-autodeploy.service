@@ -1,5 +1,5 @@
 [Unit]
-Description=Civilization Wiki auto-deploy poller (one tick)
+Description=Wiki auto-deploy poller (one tick)
 After=network-online.target
 
 [Service]

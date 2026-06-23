@@ -14,12 +14,12 @@ dark-factory repo set is resolved live from the GitHub `dark-factory` topic (nev
 
 ## Schedule (systemd user timer, 5-min cadence)
 
-Installed as a user timer mirroring `civwiki-autodeploy`. The unit files live in
-`compile/systemd/civwiki-inflight.{service,timer}`:
+Installed as a user timer mirroring `wiki-autodeploy`. The unit files live in
+`compile/systemd/wiki-inflight.{service,timer}`:
 
-    cp compile/systemd/civwiki-inflight.{service,timer} ~/.config/systemd/user/
+    cp compile/systemd/wiki-inflight.{service,timer} ~/.config/systemd/user/
     systemctl --user daemon-reload
-    systemctl --user enable --now civwiki-inflight.timer
+    systemctl --user enable --now wiki-inflight.timer
 
 The timer runs `inflight.py` from the serving checkout every 5 minutes, so the arc's live
 overlay reflects any open/merge across the dark-factory repos within one interval. On an

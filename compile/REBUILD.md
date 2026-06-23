@@ -64,10 +64,10 @@ deliberate human steps.
 ```
 loginctl enable-linger transpara
 mkdir -p ~/.config/systemd/user
-cp compile/systemd/civwiki-autodeploy.* ~/.config/systemd/user/
+cp compile/systemd/wiki-autodeploy.* ~/.config/systemd/user/
 systemctl --user daemon-reload
-systemctl --user enable --now civwiki-autodeploy.timer
-journalctl --user -u civwiki-autodeploy -f      # logs
+systemctl --user enable --now wiki-autodeploy.timer
+journalctl --user -u wiki-autodeploy -f      # logs
 ```
 A blocked tick (unauthorized / dirty / build-fail) leaves the live site
 untouched and flips the on-page "Auto-deploy blocked" banner.
