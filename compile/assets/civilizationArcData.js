@@ -6,11 +6,11 @@
   // All narrative beats, gates, decisions, and live work live in items[].
   // Validated by CivOntology.validateItems(items).
   window.CIVILIZATION_ARC_DATA = {
-    title: "Arc of Transpara-AI Civilization Development",
+    title: "Civilization Progress Chart",
     subtitle:
-      "A compressed systems timeline of the Transpara-AI / Hive / Civilization project, from origin through operating civilization.",
+      "A display-only timeline lens for the Transpara-AI / Hive / Civilization project.",
     explanation:
-      "This arc is a read lens onto the Civilization Wiki: the Searles primitive basis, the Transpara-AI fork, Hive governance, the one-civilization model, the roles catalog, the advisory memory/wiki layer, the observatory, validation runs, and the deployment arc. Past regions are classified as reconstructed, canonical, or active; planned regions exist as high-level arc plans but remain authorization-gated; faded regions are future scope.",
+      "This chart is a single wiki page, not the wiki home page and not authority. It reads the Searles primitive basis, the Transpara-AI fork, Hive governance, the one-civilization model, the roles catalog, the advisory memory/wiki layer, the observatory, validation runs, and the deployment arc. Past regions are classified as reconstructed, canonical, or active; planned regions exist as high-level arc plans but remain authorization-gated; faded regions are future scope.",
     domain: { start: 0, end: 15 },
 
     // Sprint lane vocabulary — one entry per old phase, in order.

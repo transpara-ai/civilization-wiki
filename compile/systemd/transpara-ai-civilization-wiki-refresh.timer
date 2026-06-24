@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh the Transpara-AI Civilization Wiki freshness signal
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=15min
+AccuracySec=1min
+RandomizedDelaySec=30s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

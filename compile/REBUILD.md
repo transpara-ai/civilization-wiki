@@ -1,10 +1,13 @@
 # Rebuilding the wiki
 
-The Civilization Wiki refreshes in two tiers — a cheap deterministic one (automatic) and an expensive LLM one (manual). The split keeps the substrate honest without unattended spend or unattended pushes.
+The Civilization Wiki refreshes in two tiers — a cheap deterministic one
+(automatic) and an expensive LLM one (manual). The split keeps the substrate
+honest without unattended spend or unattended pushes.
 
-## Tier 1 — nightly, deterministic (`compile/refresh.py`)
+## Tier 1 — systemd timer, deterministic (`compile/refresh.py`)
 
-Installed as a cron job (runs ~03:00). It:
+Installed on nucbuntu as a user-level systemd timer for the `transpara` account
+and run every 15 minutes after boot. It:
 1. mirrors the first-party dark-factory sources into `raw/transpara/`,
 2. hashes all `raw/` sources and diffs against the last snapshot,
 3. flags which articles have **stale sources** (their `sources:` cite a changed file),
@@ -18,7 +21,52 @@ It does **not** call an LLM, **not** commit, **not** push. Run it by hand anytim
 python3 compile/refresh.py
 ```
 
-**On-demand "update the table now" is the same command.** `refresh.py` is both the nightly cron job and the on-demand path: it recomputes the stats from `wiki/` ground truth and rewrites the `index.md` block idempotently — running it twice with no corpus change leaves no diff. It never commits; review the `index.md` diff and commit it yourself.
+**On-demand "update the table now" is the same command.** `refresh.py` is both
+the timer tick and the on-demand path: it recomputes the stats from `wiki/`
+ground truth and rewrites the `index.md` block idempotently — running it twice
+with no corpus change leaves no diff. It never commits; review the `index.md`
+diff and commit it yourself.
+
+## Browser source ingest — local authoring server (`compile/ingest_server.py`)
+
+Static serving is read-only. Browser upload, reference update, and rebuild use
+the local authoring server:
+
+```
+python3 compile/ingest_server.py 127.0.0.1 8787
+```
+
+Open `/ingest.html` on that server to batch-select one or more local documents,
+paste one or more external source URLs, optionally select a target wiki article,
+optionally name the source being superseded, then click **Ingest and rebuild**.
+The endpoint writes uploaded files under `raw/inbox/YYYY-MM-DD/<article>/`,
+appends manifest rows to `raw/inbox/manifest.jsonl`, appends selected source
+references to the target article frontmatter, appends local uploaded documents
+to `raw_documents`, and reruns `compile/build_site.py`. If no target article is
+selected, the first uploaded markdown document creates a provisional
+investigation article so it is visible in the left navigation rather than
+remaining an orphaned source.
+
+This is a **source-registration** path, not an LLM article rewrite path. It does
+not synthesize article prose, does not commit, does not push, and does not
+promote the result beyond the checkout it is serving. If a source update
+requires a substantive article rewrite, that remains Tier 2.
+
+The write endpoints are not a public LAN API. Without
+`CIVWIKI_AUTHORING_TOKEN`, `POST /api/ingest` and `POST /api/rebuild` only allow
+loopback clients. If the service is deliberately bound to a non-loopback
+address, set `CIVWIKI_AUTHORING_TOKEN` in
+`~/.config/transpara-ai-civilization-wiki.env` and send it as the
+`X-CivWiki-Authoring-Token` header, and set `CIVWIKI_ALLOWED_HOSTS` to the exact
+hostnames the browser should use. The `/api/articles` metadata endpoint is
+readable for the ingest UI, but it only includes source paths for loopback or
+token-authorized clients. The static wiki can be made LAN-visible with a
+separate read-only service/proxy; do not expose the authoring server as the
+public read route.
+
+Open `/sources.html` to browse every served raw/reference source. Article source
+panels and inline raw-path references link into `source/<id>.html` so any raw
+article source cited by the wiki can be opened directly.
 
 ## Tier 2 — article re-compile, manual (LLM, on demand)
 
@@ -26,10 +74,58 @@ Re-synthesizing article **content** from sources is the expensive, autonomous-sp
 
 ## Serving
 
-`dist/` is served on nucbuntu at `:8787`. The cron regenerates it in place; only restart the static server if the host reboots:
+The primary nucbuntu authoring route is now the Transpara-AI Civilization Wiki
+service on loopback `:8787`. It serves `dist/` and the browser ingest API from
+this checkout, and it is installed as a linger-enabled user systemd service so
+it starts after reboot without running as root:
 
 ```
-cd /Transpara/transpara-ai/repos/wiki/dist && python3 -m http.server 8787 --bind 0.0.0.0
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+```
+
+The systemd templates prefer `.venv/bin/python3` through `CIVWIKI_PYTHON` and
+fall back to `/usr/bin/python3` only when the venv is absent.
+
+```
+systemctl --user status transpara-ai-civilization-wiki.service
+journalctl --user -u transpara-ai-civilization-wiki.service -f
+```
+
+Do not run a parallel cron `@reboot` `http.server` on `:8787`; the legacy wiki
+cron entries were retired when the systemd service became the primary route.
+
+The deterministic freshness timer is separate from the web service:
+
+```
+systemctl --user status transpara-ai-civilization-wiki-refresh.timer
+systemctl --user list-timers transpara-ai-civilization-wiki-refresh.timer
+journalctl --user -u transpara-ai-civilization-wiki-refresh.service -f
+```
+
+The timer uses `flock` on `compile/.wiki-write.lock`; browser ingest uses the
+same lock. That keeps timer refreshes and upload-triggered rebuilds from writing
+the wiki/dist surfaces concurrently.
+
+The generated repository catalog is host-local: when sibling Transpara-AI repos
+are present, the build reads their README files and git metadata. On hosts
+without that sibling tree, the wiki still builds and the repo catalog degrades
+to the committed wiki corpus. The refresh job holds the same write lock used by
+browser ingest while it rebuilds, so long-running local git scans can briefly
+delay an ingest/rebuild request.
+
+Do not put a reverse proxy in front of the authoring endpoints unless it forwards
+the `X-CivWiki-Authoring-Token` header and the token is configured. A same-host
+proxy can otherwise make LAN-origin writes appear loopback-local to the Python
+server. A read-only LAN proxy must exclude `source/*.html` and `search-index.js`
+unless the confidential raw source corpus and full-text source index have been
+approved for that audience. Sibling-repo README/source rendering is
+host-local-trusted and must not be treated as a scrubbed public artifact.
+
+Read-only static previews remain useful on alternate ports:
+
+```
+python3 -m http.server 8798 --bind 127.0.0.1 --directory dist
 ```
 
 ## Browser verification

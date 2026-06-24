@@ -1,46 +1,136 @@
 ---
-title: Civilization Wiki — index
-last_compiled: "2026-06-17"
-run: "Run-3 (thirteen-graphs completion + arc advancement + runtime objects)"
-status: partial — approaching corpus coverage
-article_count: 92
+title: Transpara-AI Civilization Wiki — front page
+last_compiled: "2026-06-24"
+run: "Run-10 (service hardening + source safety)"
+status: partial — source ingest, repository navigation, service hardening, and Stage 0 research visibility are in place; full corpus sweep and doctrine acceptance remain separate work
+article_count: 101
 ---
 
-# Civilization Wiki — index
+# Transpara-AI Civilization Wiki
 
-The arc spine and article index for the Transpara-AI Civilization wiki. This is a
-[Karpathy-style LLM wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f):
-a self-maintaining, interlinked knowledge substrate compiled from the corpus
-(see `DESIGN.md`). The wiki is the source of truth for the narrative; every
-downstream view (Mission Control, the spine/story view) is a read lens onto it.
+The Transpara-AI Civilization Wiki is the memory and interpretation layer for a
+specific historical turn: the moment Michael Saucier read Matt Searles' work and
+saw that it was not merely an interesting AI philosophy, but a missing control
+theory for how humans and agents could work together without dissolving
+responsibility.
+
+Searles' starting question was deceptively small: when a complex system produces
+a bad outcome, how do you trace it back to the exact thing that caused it, and
+where did the chain break? His answer began with twenty primitives, then an
+event graph, then the claim that intelligence itself should be treated as just
+another operation inside a causal system. The important part was not that the
+primitive framework was metaphysically proven. It was not. The important part
+was that it gave language to the problem Michael was already living inside:
+AI-assisted work can become powerful faster than it becomes accountable.
+
+The epiphany was this:
+
+> If AI agents are going to help build real systems, they cannot sit above the
+> work as unverifiable oracles. They have to live inside the same graph of
+> cause, evidence, authority, review, and consequence as every other actor.
+
+For Transpara, that insight landed with unusual force. Transpara LLC's commercial
+Platform already exists to make industrial reality visible: refineries, power
+plants, pharmaceutical plants, drilling platforms, telecommunications networks,
+satellite systems, military production facilities, and other high-consequence
+environments depend on systems where hidden state, untraceable action, and vague
+authority are not philosophical problems. They are operational risks.
+
+The Civilization arc is the inward turn of that same discipline. It asks what
+happens when the tools used to build and govern software become agentic
+participants in the work. It asks how a single human, a company, a fleet of AI
+agents, a body of doctrine, a graph of evidence, and a living software factory
+can become one accountable operating system without pretending that autonomy is
+trustworthy merely because it is impressive.
+
+This is why the project outgrew the name **Dark Factory**. Dark Factory named an
+evidence-first software-production system: human intent becomes a FactoryOrder;
+FactoryOrder becomes tasks; tasks become bounded execution; bounded execution
+leaves evidence; evidence passes gates; gates lead to certification or explicit
+rejection. That remains essential. But the larger thing is not a factory alone.
+It is the emergence of a governed adjacent civilization that augments Transpara's
+humans, preserves human authority, and learns to perform useful work only inside
+an auditable membrane.
+
+The historical significance is therefore not "an AI coding project." It is a
+field experiment in whether a company can develop an adjacent agent civilization
+without surrendering provenance, consent, review, or responsibility. The target
+is not a chatbot, not a prompt pack, not a swarm, and not a replacement for
+Transpara LLC's humans. The target is a governed civic substrate: roles, rights,
+invariants, authority decisions, runtime envelopes, proof-of-work packets,
+OpenBrain capture, wiki curation, and EventGraph truth arranged so that every
+material action can answer: who asked, who acted, under what authority, with what
+evidence, against which acceptance criteria, and with what residual risk?
+
+The philosophical motive is equally important. The Searles corpus contributes a
+primitive basis and an epistemic warning. It says the graph matters; it also says
+the framework must not become sacred. The Cult Test is part of the inheritance:
+if a framework explains everything, distrust it; if it cannot be wrong, it is not
+science. Transpara-AI adopts the Searles work as motive, vocabulary, and
+accountability premise, not as implementation authority. Accepted authority still
+comes from recorded doctrine, reviewed artifacts, merged evidence, and explicit
+human authorization.
+
+Read this wiki, then, as a living encyclopedia of that transformation. It compiles
+source philosophy, Dark Factory lineage, operating doctrine, OpenBrain memory,
+Stage 0 institutional-substrate material, and the Platform / transpara-MCP
+boundary into interlinked articles. Its job is not to make the Civilization sound
+finished. Its job is to keep the origin, the motive, the gaps, the evidence, and
+the current doctrine legible enough that the next step can be governed rather
+than merely inspired.
+
+> **Front-page authority boundary.** This page is narrative framing. It is not an
+> authority decision, not accepted doctrine by itself, not release evidence, and
+> not production truth. The source philosophy motivates; the accepted packets,
+> EventGraph records, PRs, reviews, gates, and human decisions govern.
+
+Start with:
+
+| Topic | Article |
+| --- | --- |
+| Why the Searles corpus matters | `[[primitive-basis]]` |
+| Day one: the failure-tracing seed | `[[the-20-primitives]]` |
+| Dark Factory as governed production | `[[dark-factory]]` |
+| The Civilization as north star | `[[the-civilization]]` |
+| Institutional frame | `[[civilization-institutional-substrate]]` |
+| Stage 0 preparation boundary | `[[stage-0-institutional-substrate]]` |
+| Dark Factory as lineage | `[[dark-factory-lineage]]` |
+| Platform and live-data boundary | `[[platform-transpara-mcp-boundary]]` |
+| OpenBrain to wiki curation | `[[openbrain-wiki-knowledge-pipeline]]` |
+| Research placement rule | `[[external-research-placement]]` |
 
 ---
 
-## ⚠ Freshness — read this first (fail-loud)
+## Freshness
 
 | Field | Value |
 |---|---|
-| **last_compiled** | **2026-06-17** |
-| **run** | **Run-3 (thirteen-graphs completion + arc advancement + runtime objects)** |
-| **completeness** | **PARTIAL — arc spine, philosophy, runtime objects, and thirteen-graphs complete; full corpus sweep still deferred** |
+| **last_compiled** | **2026-06-24** |
+| **run** | **Run-10 (service hardening + source safety)** |
+| **completeness** | **PARTIAL — search, resizable navigation, source ingest, repository navigation, and service hardening are in place; Stage 0 substrate source is integrated; the full corpus sweep and doctrine acceptance remain separate work** |
 
 <!-- stats:begin — generated by compile/refresh.py from wiki/ frontmatter; do not hand-edit between these markers -->
-**Article count (auto-derived from `wiki/` frontmatter):** 92 — 27 foundational · 25 architecture · 10 arc · 16 investigation · 13 concept · 1 meta
+**Article count (auto-derived from `wiki/` frontmatter):** 101 — 27 foundational · 6 institutional · 25 architecture · 10 arc · 18 investigation · 13 concept · 2 meta
 <!-- stats:end -->
 
-**This is Run-3, not the finished wiki.** Run-1 compiled the core spine. Run-2
+**This is Run-10, not the finished wiki.** Run-1 compiled the core spine. Run-2
 extended that with the landscape survey entities, the Searles philosophy fill-in,
-and fifteen landscape investigation-tier articles. **Run-3** closes the deferred
-long-tail from Run-2: the remaining individual thirteen-graphs articles (the-44-primitives,
-the-200-primitives, the-work-graph, and all nine new per-graph articles through
-the-existence-graph), the runtime objects (authority-request, execution-receipt,
-bounded-runtime), the observatory surface and its transparency contract, the first
-fully-completed slice-1 run, the deployment arc plan, the roles catalog, gate-k,
-mind-zero-five, open-weight LLM routing, upstream-fork-sync, hermes-self-evolution,
-offline-llm-optimization, and the civilization-wiki meta article. **The in-scope
-corpus is still not swept** — the Civilization corpus allowlisted in `DESIGN.md`
-§Corpus scope (the dark-factory doc set + runtime repos + the ~1,175-thought Open
-Brain export + the Searles posts) has not been exhausted. Treat any concept not in the article index
+and fifteen landscape investigation-tier articles. Run-3 closed part of the
+deferred long tail. **Run-4** integrates the Stage 0 institutional-substrate
+source snapshot, adds an institutional tier, and moves the progress chart to a
+dedicated route. **Run-5** adds the front-page narrative frame tying Michael's
+Searles epiphany, Transpara's industrial accountability posture, and the
+Civilization institutional substrate into one readable entry point. **Run-6**
+adds static full-site search and makes the Sakana and Hermes research artifacts
+visible as first-class advisory research pages. **Run-7** widens and adds
+persistent resizing to the navigation rail, removes external research/report
+links and the progress chart from the front-page start table, and consolidates
+Hermes into one unifying article. **Run-8** adds source-serving and browser
+ingest. **Run-9** adds the Transpara-AI repository catalog. **Run-10** hardens
+the service boundary, source rendering, upload containment, and freshness timer
+for first-class local operation. **The in-scope corpus is still not swept** —
+the Civilization corpus allowlisted in
+`DESIGN.md` has not been exhausted. Treat any concept not in the article index
 below as **not-yet-compiled**, not as absent from the project.
 
 **Fail-legible by construction.** Where this index would otherwise emit a link to
@@ -77,6 +167,10 @@ silently resolved):
   Both schemes are reproduced in the affected articles; this index uses Scheme A
   numbering for the tier names. See `[[thirteen-graphs]]`.
 - **Gate K and Gate L.** Defined in v4.0. Gate K is closed for pre-live sequencing by the 2026-06-17 human waiver in `transpara-ai/docs#138`, while the production go-live/live-data boundary still requires revalidation. Gate L remains unsatisfied and requires its own human-authorized reconciliation evidence. They extend the Gate A–J lettering with a different scope (development-loop hardening and v3.9-to-v4.0 reconciliation). See `[[gate-k]]` and `[[gate-l]]`.
+- **Stage 0 institutional substrate status.** The Stage 0 scaffold is copied
+  into this wiki as provenance-aware source material. Its own frontmatter says
+  `status: proposal` and `canonical: false`. The wiki presents it as advisory
+  evidence, not accepted doctrine.
 
 ---
 
@@ -84,7 +178,8 @@ silently resolved):
 
 A chronological spine from day one to the present. Each `[[...]]` link is a
 compiled article; **TBD** marks a node the grounded record names but the wiki has
-not yet given its own article.
+not yet given its own article. The visual progress chart now lives at
+`[[civilization-arc]]`.
 
 ### 1 — Day one: the 20 primitives (2026-02-28)
 
@@ -368,13 +463,15 @@ the program plan.
 | `[[slice-1-completion]]` | Slice 1 Completion — G-1.2 round 6; first society to finish (2026-06-12) |
 | `[[deployment-arc]]` | The Deployment Arc — program plan from Slice 1 to continuous production (2026-06-09) |
 
-### Investigation — the surveyed agent-tooling landscape (16)
+### Investigation — surveyed landscape and research reports (18)
 
 The external tools, frameworks, and prior research the 2026-05-13 landscape
 investigation evaluated — compiled from the first-party survey checkpoints and
 Open Brain, **not** from `raw/investigations/*` (still empty, Phase 2). Each was
 admitted only as a reference / optional adapter / pattern, never as a control
-role (v3.9 Decision 15).
+role (v3.9 Decision 15). Stage 0 external-landscape research reports are
+included here as advisory pages so the copied corpus is visible to readers
+without overloading the front-page start table.
 
 | Article | Entity |
 |---|---|
@@ -383,8 +480,10 @@ role (v3.9 Decision 15).
 | `[[paperclip]]` | Paperclip — org / budget / approval UX pattern only |
 | `[[symphony]]` | Symphony — trials / proof-of-work packaging pattern |
 | `[[multica]]` | Multica — managed-agent / teammate-board UX pattern |
-| `[[hermes-agent]]` | Hermes Agent — governed self-evolution optimizer pattern (deferred) |
-| `[[hermes-self-evolution]]` | Hermes Self-Evolution — DSPy + GEPA evolutionary optimization pipeline (forked reference, not integrated) |
+| `[[hermes-agent]]` | Hermes Agent — runtime adapter, plugin-reference, optimizer pattern, and internal evaluation unified |
+| `[[sakana-ai-evaluation]]` | Sakana AI Capability Evaluation — internal research report on adjacent AI capability patterns |
+| `[[sakana-ai-adjacent-landscape]]` | Sakana AI Adjacent Technologies and Organisations — adversarially verified external-landscape map |
+| `[[google-open-knowledge-format-capability-evaluation]]` | Google Open Knowledge Format Capability Evaluation — browser-ingested advisory research on OKF envelope patterns |
 | `[[openclaw]]` | OpenClaw — deferred gateway/session adapter & UX candidate |
 | `[[pageindex]]` | PageIndex — vectorless `DocumentEvidenceRetriever` (augment, not replace) |
 | `[[mempalace]]` | MemPalace — advisory memory candidate (no truth authority) |
@@ -421,7 +520,7 @@ product horizon concepts and the node's-eye readings of the framework.
 
 | Article | Entity |
 |---|---|
-| `[[civilization-wiki]]` | The Civilization Wiki — Karpathy-style LLM knowledge substrate; substrate before visualization |
+| `[[civilization-wiki]]` | The Transpara-AI Civilization Wiki — Karpathy-style LLM knowledge substrate; substrate before visualization |
 
 ---
 

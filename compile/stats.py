@@ -14,7 +14,7 @@ import pathlib
 # Canonical breakdown order. Any tier value NOT listed here, and any article
 # missing a `tier:` field (-> NO_TIER), is surfaced as its own bucket rather
 # than folded into a default: an unexpected tier shows up, never hides.
-CANONICAL_TIERS = ["foundational", "architecture", "arc",
+CANONICAL_TIERS = ["foundational", "institutional", "architecture", "arc",
                    "investigation", "concept", "meta"]
 NO_TIER = "(no-tier)"
 
