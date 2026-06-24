@@ -7,10 +7,22 @@ aliases:
   - transpara-ai/hermes-agent
   - hermes-agent-self-evolution
   - hermes-example-plugins
+  - Hermes Self-Evolution
+  - Hermes Agent Self-Evolution Evaluation
+  - TAI-RES-2026-002 Hermes
   - the agent that grows with you
 tier: investigation
-status: compiled
-last_compiled: 2026-06-13
+status: compiled; unified article
+last_compiled: 2026-06-24
+investigation_topic: Hermes Agent
+civilization_contribution: "Contributed the governed optimizer pattern behind U7 CapabilityArtifact governance and U8 CapabilityEvolution sequencing; Hermes itself remains deferred and pattern-only."
+raw_documents:
+  - raw/inbox/2026-06-24/hermes-agent/TAI-RES-2026-002-v1.0.0-Hermes-Agent-Self-Evolution-Evaluation-a7b119333702.md
+  - /Transpara/transpara-ai/repos/docs/dark-factory/v3.9/implementation/epics/02-technology-decision-crosswalk-v3.9.md
+  - /Transpara/transpara-ai/repos/docs/dark-factory/research/checkpoints/2026-05-13-05-phase-4-batch-c-agent-execution-orchestration.md
+  - /Transpara/transpara-ai/repos/docs/dark-factory/research/checkpoints/2026-05-13-06-phase-4-batch-d-governance-self-evolution-platform-tooling.md
+  - /Transpara/transpara-ai/repos/docs/dark-factory/research/checkpoints/2026-05-13-07-phase-5-inclusion-marginal-contribution-matrix.md
+  - /Transpara/transpara-ai/repos/docs/dark-factory/research/checkpoints/2026-05-13-10-civilization-landscape-investigation-closeout.md
 sources:
   - /Transpara/transpara-ai/repos/docs/dark-factory/v3.9/implementation/epics/02-technology-decision-crosswalk-v3.9.md  # v3.9.1 crosswalk; Hermes decision row (L80) + per-item note "governed optimizer pattern only" (L163-167); freeze/reopen policy (L41-68)
   - /Transpara/transpara-ai/repos/docs/dark-factory/research/checkpoints/2026-05-13-05-phase-4-batch-c-agent-execution-orchestration.md  # Batch C — repo-grounded analysis of hermes-agent (L532-655) and hermes-example-plugins (L657+); README-only evidence
@@ -20,6 +32,8 @@ sources:
   - "GitHub API: repos/transpara-ai/hermes-agent (fork metadata, 2026-06-13 live)"  # isFork=true, parent=NousResearch/hermes-agent, createdAt 2026-05-11T11:32:53Z, description "The agent that grows with you", MIT
   - "GitHub API: repos/transpara-ai/hermes-agent-self-evolution (fork metadata, 2026-06-13 live)"  # isFork=true, parent=NousResearch/hermes-agent-self-evolution, createdAt 2026-05-11T11:32:06Z, description "Evolutionary self-improvement … DSPy + GEPA"
   - "GitHub API: repos/transpara-ai/hermes-example-plugins (fork metadata, 2026-06-13 live)"  # isFork=true, parent=NousResearch/hermes-example-plugins, createdAt 2026-05-13T03:42:39Z, MIT
+  - raw/inbox/2026-06-24/hermes-agent/TAI-RES-2026-002-v1.0.0-Hermes-Agent-Self-Evolution-Evaluation-a7b119333702.md  # repo-local copy of released internal research report; advisory, not doctrine
+  - /Transpara/transpara-ai/repos/docs/civilization/v4.1/implementation/epics/epic-15-institutional-substrate-doctrine/corpus/copied/civilization/knowledge/external-landscape/hermes-agent-self-evolution/TAI-RES-2026-002-v1.0.0-Hermes-Agent-Self-Evolution-Evaluation.md  # original Stage 0 copied-corpus path; provenance context only
   - "Upstream context only (not re-published): github.com/NousResearch/hermes-agent (+ -self-evolution, -example-plugins)"  # cited as context for why we forked to read; never mirrored
 confidence:
   decision_row: medium — the v3.9.1 crosswalk has ONE row labelled "pattern-only / deferred" for "Hermes" (L80), but the investigation's own Phase 5 matrix records THREE distinct Hermes rows with three different decisions (runtime-adapter / plugin-reference / capability-optimizer). The crosswalk row collapses them; both are stated below, neither silently picked.
@@ -28,6 +42,7 @@ confidence:
   dspy_gepa_claim: medium — "DSPy + GEPA" is the self-evolution repo's own description (live) and the Batch D analysis (README/PLAN); it is the upstream's self-description, not independently verified behaviour.
   license: high for hermes-agent / hermes-example-plugins (MIT, live + README badge); medium for self-evolution — README says MIT but PLAN flags an AGPL-v3 "Darwinian Evolver" path that must stay external-CLI-only (Batch D L194)
   self_evolution_risk: asserted, not proven — "self-improvement loop can become autonomous capability promotion" is the investigation's risk assessment, not an observed failure
+  article_unification: this page supersedes the prior separate Hermes Agent, Hermes Self-Evolution, and Hermes evaluation wiki surfaces; they overlap but do not materially contradict
 ---
 
 # Hermes Agent
@@ -37,6 +52,30 @@ confidence:
 This article is about **our investigation and decision**, not a mirror of the upstream's documentation. The NousResearch repos are public OSS; they are cited here only as context for *why we forked them to read them*, never re-published.
 
 > ⚠ **Fail-legible note (one row vs. three).** The compile request, following the v3.9.1 crosswalk, treats "Hermes" as a single item with one decision ("pattern-only / deferred"). The investigation's own **Phase 5 inclusion matrix** is more granular: it records **three separate rows** with **three different decisions** — and the crosswalk collapses them into one "Hermes" line. This article keeps both layers visible and does not silently pick one. See "Where it sits in the decision crosswalk" and "The three forks, three decisions" below.
+
+## Why this is one article
+
+Run-6 briefly exposed three Hermes pages as peers: the original Hermes Agent
+family page, a Hermes Self-Evolution optimizer page, and the released internal
+Hermes self-evolution evaluation. That was structurally misleading. They are not
+three independent research efforts.
+
+They are three evidence layers about one topic:
+
+| Layer | What it contributes | Does it contradict the others? |
+| --- | --- | --- |
+| `hermes-agent` / `hermes-example-plugins` / `hermes-agent-self-evolution` survey evidence | The 2026-05-13 landscape investigation: runtime adapter, plugin reference, and optimizer pattern decisions | No. It explains the original fork-family decision. |
+| Hermes Self-Evolution technical reading | The DSPy + GEPA optimizer mechanics: trace-driven mutation, candidate variants, tests, PR output, guardrails | No. It is the detailed optimizer slice of the same family. |
+| `TAI-RES-2026-002-v1.0.0-Hermes-Agent-Self-Evolution-Evaluation.md` | The 2026-06-24 internal research report comparing Hermes to the Civilization Capability Evolution chain | No. It confirms the deferral and adds the "same loop, different leash" analysis. |
+
+The only tension is resolution, not substance. The crosswalk collapses Hermes
+into one row; the investigation matrix splits the family into three repos; the
+new evaluation compares the optimizer to the native [[capability-evolution]]
+chain. The unified reading is: **Hermes is one external family with three useful
+facets, all advisory and all outside control roles.**
+
+This article therefore supersedes the prior separate Hermes wiki leaves. Search
+terms for "Hermes Self-Evolution" and "Hermes evaluation" resolve here.
 
 ## Where it sits in the decision crosswalk
 
@@ -135,6 +174,50 @@ Unlike a pure reject, the Hermes family left a mark on the native design. The in
 
 So the Hermes optimizer is, in a real sense, one of the reference patterns behind the shape of the native [[capability-evolution|Capability Evolution]] chain — adopted as *inspiration for a governed native pattern*, never as a dependency or a promoter. That chain was then built (and twice adversarially hardened) in `transpara-ai/eventgraph` as the E2 capability-evolution MVP — see [[capability-evolution]] for how the "optimizer cannot self-promote" intent fared in real code.
 
+## What the 2026-06-24 evaluation adds
+
+The released internal evaluation
+`TAI-RES-2026-002-v1.0.0-Hermes-Agent-Self-Evolution-Evaluation.md` does not
+reverse the prior Hermes decision. It sharpens it.
+
+Its core finding is that Hermes Self-Evolution and the native Capability
+Evolution chain describe almost the same loop:
+
+```text
+Hermes: read -> eval dataset -> optimize -> candidate -> evaluate -> gate -> PR
+
+Civilization: EvolutionOrder -> EvalDataset -> OptimizationRun ->
+CandidateVariant -> BenchmarkResult -> HumanReview -> CapabilityVersion ->
+ActivationPolicy -> FactoryRuntimeVersion -> RollbackRecord
+```
+
+The difference is where authority stops. Hermes stops at "open a PR" and relies
+on human review. The Civilization makes the leash part of the substrate:
+optimizer actors cannot promote their own output, only the release role may
+promote, global activation is disabled for the MVP, review evidence must bind to
+the promoted candidate and benchmark result, and activation is a governed edge.
+
+So the new evaluation confirms the prior posture:
+
+| Prior item | Unified reading |
+| --- | --- |
+| v3.9 crosswalk | "governed optimizer pattern only / deferred" remains correct. |
+| Three Hermes forks | runtime adapter, plugin-reference, and optimizer facets remain distinct but belong in one article. |
+| ADR-0010 | proposed governed-optimizer posture is consistent with the native chain. |
+| U7 / U8 | CapabilityArtifact governance and CapabilityEvolution sequencing remain the right native learning path. |
+| Decision 15 | external frameworks stay outside control roles. |
+
+The learning opportunities remain advisory and bounded:
+
+| Opportunity | Boundary |
+| --- | --- |
+| Use GEPA for `OptimizationRun -> CandidateVariant` | optimizer creates candidates only |
+| Govern SessionDB-style trace mining as EvalDataset input | no raw private-context shortcut |
+| Add size-limit and caching-compatibility predicates | native validation, not Hermes authority |
+| Mine Hermes Agent backends as RuntimeBroker reference | deferred Epic 6+ adapter work |
+| Use Hermes plugins as CapabilityArtifact checklist | U7 governance input only |
+| Execute one end-to-end governed EvolutionOrder | Epic 8-style canary, with rollback |
+
 ## Fail-legible notes
 
 - **One crosswalk row, three real decisions (stated, not resolved).** The v3.9.1 crosswalk has a single "Hermes / pattern-only / deferred" row (L80). The investigation's Phase 5 matrix has three rows: `hermes-agent` = optional future **runtime adapter** (RuntimeBroker candidate), `hermes-example-plugins` = **pattern/reference only**, `hermes-agent-self-evolution` = optional **capability-evolution** pattern. These are not contradictory — they are different repos — but the crosswalk's collapse loses the runtime-adapter and plugin-reference facets. Both layers are above; neither is silently chosen.
@@ -142,6 +225,7 @@ So the Hermes optimizer is, in a real sense, one of the reference patterns behin
 - **DSPy + GEPA is the upstream's self-description.** "Evolutionary self-improvement … using DSPy + GEPA" is the live repo description and the Batch D README/PLAN reading; it is corroborated across our notes but traces to the upstream's own framing, not independently verified behaviour. Carried as medium-confidence context.
 - **License nuance.** `hermes-agent` and `hermes-example-plugins` are MIT (live fork metadata + README badges). The **self-evolution** repo's README says MIT, but its PLAN flags a **"Darwinian Evolver" path that is AGPL v3** and "should be external CLI only" (Batch D L194). The investigation's licensing line records "Hermes self-evolution MIT with AGPL external code option." If this is ever reopened, the AGPL boundary is a supply-chain gate, not a footnote.
 - **Self-evolution risk is asserted, not observed.** "The self-improvement loop can become autonomous capability promotion if not constrained" is the investigation's risk assessment — the reason the decision is fenced to pattern-only and deferred — not a record of an observed failure in the Hermes code.
+- **The 2026-06-24 evaluation confirms; it does not activate.** The evaluation's main contribution is the "same loop, different leash" comparison. It does not promote Hermes into the kernel, truth source, Work replacement, policy owner, release authority, certification authority, capability promoter, factory controller, or Site replacement.
 - **Fork dates differ across the three repos.** The two repos the prompt names (`hermes-agent`, `hermes-agent-self-evolution`) were forked **2026-05-11** (matching the prompt). The third, `hermes-example-plugins`, was forked **2026-05-13** — two days later, the same day as the investigation. Low-stakes; noted for completeness.
 - **Upstream cited, never re-published.** Per org rule, `NousResearch/hermes-agent` (and the two sibling repos) are public OSS. Their descriptions ("The agent that grows with you"; the DSPy/GEPA self-evolution line) and MIT licensing are corroborated live as context for *why we forked them to read them*, not as content to mirror. The wiki subject is our investigation and our decision.
 
@@ -154,6 +238,7 @@ So the Hermes optimizer is, in a real sense, one of the reference patterns behin
 - **Investigation closeout** — `…/research/checkpoints/2026-05-13-10-civilization-landscape-investigation-closeout.md` (U7/U8 update set crediting Hermes plugins and Hermes self-evolution; routed through [[civilization-landscape-investigation]] this run).
 - **Fork metadata (live, 2026-06-13)** — GitHub API: `repos/transpara-ai/hermes-agent` (`isFork=true`, `parent=NousResearch/hermes-agent`, `createdAt=2026-05-11T11:32:53Z`, `description="The agent that grows with you"`, MIT); `repos/transpara-ai/hermes-agent-self-evolution` (`parent=NousResearch/hermes-agent-self-evolution`, `createdAt=2026-05-11T11:32:06Z`, `description="… Evolutionary self-improvement for Hermes Agent — optimize skills, prompts, and code using DSPy + GEPA"`); `repos/transpara-ai/hermes-example-plugins` (`parent=NousResearch/hermes-example-plugins`, `createdAt=2026-05-13T03:42:39Z`, MIT).
 - **Upstream (context only, not re-published)** — `github.com/NousResearch/hermes-agent`, `…/hermes-agent-self-evolution`, `…/hermes-example-plugins` (https://github.com/NousResearch/hermes-agent) — descriptions and MIT licensing corroborated via the fork metadata above, cited as context for the fork, not mirrored.
+- **Released internal evaluation** — `/Transpara/transpara-ai/repos/docs/civilization/v4.1/implementation/epics/epic-15-institutional-substrate-doctrine/corpus/copied/civilization/knowledge/external-landscape/hermes-agent-self-evolution/TAI-RES-2026-002-v1.0.0-Hermes-Agent-Self-Evolution-Evaluation.md` — confirms prior decisions and adds the Capability Evolution comparison; advisory, not accepted doctrine.
 - **Open Brain** — adversarial-review capture on docs PR #61 (2026-05-18) recording that the pattern-only adoptions including Hermes landed with **no upstream-refresh mechanism documented** (only Karpathy LLM Wiki had a freshness cadence).
 
 **Conflicts / open items.** (1) *One row vs. three decisions* — the crosswalk's single "Hermes / pattern-only / deferred" row vs. the Phase 5 matrix's three distinct rows (runtime-adapter / plugin-reference / capability-optimizer); stated, not resolved. (2) *License* — README-MIT vs. PLAN's AGPL-v3 "Darwinian Evolver" path in the self-evolution repo; both stated. (3) *Fork date* — 2026-05-11 for the two named repos vs. 2026-05-13 for example-plugins. (4) *Repo-internals confidence is thin* — README/PLAN only, no code read, this run or in the original investigation. `[[civilization-landscape-investigation]]`, `[[dark-factory]]`, `[[capability-evolution]]`, `[[runtime-broker]]`, `[[work]]`, `[[base-slice-0]]`, `[[paperclip]]`, `[[memory-knowledge-advisory]]`, and `[[event-graph]]` resolve to compiled articles; `[[v3-9]]` likewise.

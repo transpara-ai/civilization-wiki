@@ -19,5 +19,6 @@ compile/deploy-authorization.json
 compile/.deployed-sha
 compile/.deploy-history.json
 compile/.autodeploy.lock
+compile/.wiki-write.lock
 compile/autodeploy.log
 dist/deploy-status.json

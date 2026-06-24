@@ -1,9 +1,9 @@
 ---
 title: Civilization Wiki — provenance manifest
-last_updated: 2026-06-21
-status: partial — searles and open_brain mirrored; open_brain mirror stale after 2026-06-13; first_party/upstream_context not locally mirrored
+last_updated: 2026-06-24
+status: partial — searles, open_brain, Stage 0 source snapshot, and browser inbox scaffold mirrored; open_brain mirror stale after 2026-06-13; generated first_party/upstream_context still incomplete
 authority: reference (the source manifest named in DESIGN.md)
-tiers: [searles, first_party, open_brain, upstream_context]
+tiers: [searles, first_party, open_brain, civilization_stage0, browser_inbox, upstream_context]
 ---
 
 # Civilization Wiki — provenance manifest
@@ -11,9 +11,11 @@ tiers: [searles, first_party, open_brain, upstream_context]
 The per-source manifest named in `DESIGN.md` ("`PROVENANCE.md` — source manifest:
 each raw item → origin, date, tier"). It records, for every source the wiki is
 compiled from, its **origin**, its **date or range**, its **provenance tier**, and
-**how the wiki uses it**. Tier vocabulary is taken verbatim from `DESIGN.md`
+**how the wiki uses it**. Tier vocabulary is anchored in `DESIGN.md`
 §Ingestion: `searles`, `first_party` (Transpara-authored), `open_brain`, and
 `upstream_context` (a forked project's own docs — context, never the subject).
+This manifest also records newer wiki-maintenance tiers that emerged after the
+initial design, including `civilization_stage0` and `browser_inbox`.
 
 This file is the durable answer to "where did the wiki get this?" — the
 compile-time companion to each article's "Sources & provenance" footer and to the
@@ -22,14 +24,16 @@ fail-loud freshness header in `index.md`.
 ## ⚠ Read this first — what is, and is NOT, mirrored (fail-legible)
 
 This manifest is honest about its own gaps, the way `index.md` is honest about
-deferred articles. The four tiers exist as declared scope; only two have content
-on disk this run.
+deferred articles. The declared tiers do not all have complete local mirrors; the
+table records what is actually on disk this run.
 
-| Tier | `raw/` location | Mirrored? | State on disk (2026-06-21) |
+| Tier | `raw/` location | Mirrored? | State on disk (2026-06-24) |
 |---|---|---|---|
 | `searles` | `raw/searles/` | **Yes** | `all-posts-1.md` present (43 posts) |
 | `first_party` | (read in place — see below) | **No local mirror** | read from `docs/dark-factory`; `raw/transpara/` holds only `.gitkeep` |
 | `open_brain` | `raw/open-brain/` | **Yes, stale** | `2026-{03,04,05,06}.md` — 1,175 thoughts, 2026-03-03 through 2026-06-13; live OpenBrain checked 2026-06-21 reports 2,338 thoughts and June 21 captures |
+| `civilization_stage0` | `raw/civilization/stage-0-institutional-substrate/` | **Yes** | Stage 0 authored scaffold snapshot, excluding copied historical corpus |
+| `browser_inbox` | `raw/inbox/` | **Yes when used** | browser-ingested source drops and `manifest.jsonl`; current snapshot includes Sakana, Hermes, and OKF source files |
 | `upstream_context` | `raw/investigations/` | **No** | empty but for `.gitkeep` — Phase 2 (per `DESIGN.md`) |
 
 **What this means for trust:** the `searles` tier and the stale `open_brain`
@@ -39,7 +43,11 @@ against `docs/dark-factory` rather than copying it into `raw/transpara/` first);
 the `open_brain` tier **has a committed mirror** (`raw/open-brain/2026-{03..06}.md`,
 1,175 thoughts, 2026-03-03 through 2026-06-13) but is **not current with the live
 store** as of 2026-06-21, while `upstream_context` is still **declared but
-unfilled**. Do not read an empty
+unfilled**. Stage 0 institutional substrate sources are mirrored as a bounded
+proposal snapshot under `raw/civilization/`; they are advisory source material,
+not accepted doctrine. `raw/inbox/` is the operator-facing source drop path for
+browser ingestion; its contents are provenance evidence, not article synthesis by
+themselves. Do not read an empty
 `raw/` subdirectory as "no such source" — read it as "not yet mirrored." The
 nightly keep-current job in `DESIGN.md` is what will populate them.
 
@@ -179,6 +187,67 @@ its own nightly re-export.
 
 ---
 
+## Tier: civilization_stage0 — institutional substrate proposal snapshot
+
+The Stage 0 institutional substrate source set: a bounded copy of the authored
+scaffold created in the `docs` repo for the Civilization institutional substrate
+migration arc. This tier exists so the wiki can present Stage 0 with local,
+reviewable provenance instead of relying only on sibling checkout state.
+
+| Field | Value |
+|---|---|
+| **Location** | `raw/civilization/stage-0-institutional-substrate/` |
+| **Origin** | First-party proposal source copied from `transpara-ai/docs:civilization/v4.1/implementation/epics/epic-15-institutional-substrate-doctrine/`. |
+| **Date / range** | Created and copied 2026-06-24. |
+| **Volume** | 12 authored markdown files: README, completion spec, provenance manifest, domain indexes, closeout report, and placeholder README files. The large copied historical corpus is intentionally excluded from this wiki mirror. |
+| **Tier** | `civilization_stage0` |
+| **How the wiki uses it** | Source material for `wiki/civilization-institutional-substrate.md`, `wiki/stage-0-institutional-substrate.md`, `wiki/dark-factory-lineage.md`, `wiki/platform-transpara-mcp-boundary.md`, `wiki/openbrain-wiki-knowledge-pipeline.md`, and `wiki/external-research-placement.md`. |
+
+**Fail-legible notes (civilization_stage0):**
+- **Proposal only.** The source frontmatter records `status: proposal` and
+  `canonical: false`. Wiki presentation does not promote it.
+- **No copied historical corpus.** Stage 0's own `corpus/copied/` directory is
+  deliberately excluded from this wiki mirror to avoid importing a large
+  historical evidence set into the wiki raw tier without a separate curation
+  decision.
+- **No migration authority.** The source explicitly stopped before moving
+  `dark-factory`, changing systemd paths, changing runtime behavior, steering
+  active branches, or altering access policy.
+
+---
+
+## Tier: browser_inbox — browser-ingested source drops
+
+The browser inbox is the local authoring path for adding source material after a
+compile run. It exists so a human can drop documents or URLs through the wiki UI,
+attach them to an existing article, and trigger deterministic regeneration of
+the static site without running an LLM or changing live production routes.
+
+| Field | Value |
+|---|---|
+| **Location** | `raw/inbox/` |
+| **Origin** | Human-selected local files and external HTTP(S) URLs submitted through `/ingest.html` while `compile/ingest_server.py` is running. |
+| **Date / range** | Per-row `ingested_at` in `raw/inbox/manifest.jsonl` when populated. |
+| **Volume** | Current snapshot has **4 committed markdown source files** under `raw/inbox/2026-06-24/` and **5 manifest rows**. Three rows came from browser ingest (two files plus one URL); two `mode: "corpus-copy"` rows were hand-authored during CFAR hardening to make Hermes and Sakana adjacent-landscape source serving hermetic. |
+| **Tier** | `browser_inbox` |
+| **How the wiki uses it** | Uploaded files are served as source-viewer pages and may be appended to a target article's `sources:` frontmatter. External URLs are recorded in the manifest and source list. The static renderer includes served source documents in search. |
+
+**Fail-legible notes (browser_inbox):**
+- **Registration, not synthesis.** Browser ingest registers and serves sources;
+  it does not rewrite article prose, resolve conflicts, or make a stale article
+  current by assertion. Substantive article updates remain Tier-2 compile work.
+- **No promotion authority.** The authoring server rebuilds `dist/` in the local
+  checkout. It does not commit, push, approve, or promote a route to the live
+  public wiki.
+- **External URL constraint.** Only `http://` and `https://` references are
+  accepted by the ingest endpoint; local files are copied into `raw/inbox/` and
+  tracked by SHA-256.
+- **Supersession is advisory metadata.** The browser form can record that a new
+  source supersedes an older one, but the old source is not deleted. The article
+  or a later compile must explain the substantive difference.
+
+---
+
 ## Tier: upstream_context — forked-project docs (cited, not re-published)
 
 The forked/investigated upstream projects' **own** documentation — context for the
@@ -207,7 +276,7 @@ investigation article, **not** the subject of the wiki)," and it is explicitly
 
 ---
 
-## Tier vocabulary (verbatim from `DESIGN.md`)
+## Tier vocabulary (`DESIGN.md` plus post-design additions)
 
 | Tier | Definition (from `DESIGN.md` §Ingestion) |
 |---|---|
@@ -215,6 +284,7 @@ investigation article, **not** the subject of the wiki)," and it is explicitly
 | `searles` | The foundational philosophy. |
 | `upstream_context` | A forked project's own docs (context for its investigation article, **not** the subject of the wiki). |
 | `open_brain` | (Tracked as its own ingestion stream — the captured-thought export — within first-party authorship.) |
+| `browser_inbox` | A post-design source-registration tier for human-submitted files and URLs awaiting synthesis. |
 
 Tier is recorded both here and in each `raw/` file's frontmatter, so the compiler
 knows what is load-bearing **without anything being excluded** (`DESIGN.md`:
@@ -226,8 +296,9 @@ knows what is load-bearing **without anything being excluded** (`DESIGN.md`:
 
 - When a `raw/` subdirectory is filled (Open Brain export runs; an
   `investigations/<x>/` is added; `docs/dark-factory` is mirrored into
-  `raw/transpara/`), update that tier's **Mirrored?** state and its date/volume,
-  and flip the "what is NOT mirrored" table above.
+  `raw/transpara/`; browser ingest adds `raw/inbox/` documents), update that
+  tier's **Mirrored?** state and its date/volume, and flip the "what is NOT
+  mirrored" table above.
 - When OpenBrain access changes, verify both paths separately: the standardized MCP
   helper for capture/bounded reads, and any deployed paginated export gateway for bulk
   mirror refresh. Do not treat one as proof of the other.

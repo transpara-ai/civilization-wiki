@@ -1,11 +1,228 @@
 const { test, expect } = require("@playwright/test");
 
-test("homepage arc renders with tracks structure", async ({ page }) => {
+test("homepage is article-first and does not mount the progress chart", async ({ page }) => {
   await page.goto("/index.html");
+
+  await expect(page.locator("h1.page-title")).toHaveText("Transpara-AI Civilization Wiki");
+  const body = page.locator("article.body");
+  await expect(body).toContainText("The Transpara-AI Civilization Wiki is the memory and interpretation layer");
+  await expect(body).toContainText("The epiphany was this");
+  await expect(body).toContainText("Front-page authority boundary");
+  await expect(body.locator('a[href="primitive-basis.html"]').first()).toBeVisible();
+  await expect(body.locator('a[href="the-20-primitives.html"]').first()).toBeVisible();
+  await expect(body.locator('a[href="civilization-institutional-substrate.html"]')).toBeVisible();
+  await expect(body.locator("table").first().locator('a[href="civilization-arc.html"]')).toHaveCount(0);
+  await expect(body.locator("table").first().locator('a[href="sakana-ai-evaluation.html"]')).toHaveCount(0);
+  await expect(body.locator("table").first().locator('a[href="hermes-agent.html"]')).toHaveCount(0);
+  await expect(page.locator(".civilization-arc-nav")).toHaveCount(0);
+});
+
+test("topbar search finds visible research pages", async ({ page }) => {
+  await page.goto("/index.html");
+
+  await expect(page.locator(".brand")).toHaveText("Transpara-AI Civilization Wiki");
+  const search = page.locator("#wiki-search");
+  await expect(search).toBeVisible();
+
+  await search.fill("Sakana adjacent landscape");
+  await expect(page.locator('.search-results a[href="sakana-ai-adjacent-landscape.html"]')).toBeVisible();
+
+  await search.fill("Hermes self-evolution evaluation");
+  await expect(page.locator('.search-results a[href="hermes-agent.html"]')).toBeVisible();
+});
+
+test("topbar exposes source index and browser ingest surfaces", async ({ page }) => {
+  await page.goto("/index.html");
+
+  await expect(page.locator('.top-links a[href="sources.html"]')).toBeVisible();
+  await expect(page.locator('.top-links a[href="ingest.html"]')).toBeVisible();
+  await expect(page.locator('.top-links a[href="repos.html"]')).toBeVisible();
+
+  await page.locator('.top-links a[href="ingest.html"]').click();
+  await expect(page.locator("h1.page-title")).toHaveText("Wiki Source Ingest");
+  await expect(page.locator("#documents")).toBeVisible();
+  await expect(page.locator("#external-urls")).toBeVisible();
+  await expect(page.locator("#target-slug")).toBeVisible();
+  await expect(page.locator("#supersedes")).toBeVisible();
+  await expect(page.locator("#authoring-token")).toBeVisible();
+  await expect(page.locator('button:has-text("Ingest and rebuild")')).toBeVisible();
+});
+
+test("sidebar exposes Transpara-AI repo sections and repo README pages", async ({ page }) => {
+  await page.goto("/index.html");
+
+  const repos = page.locator('.repo-side-group[data-tier="repos"]');
+  if (await repos.count() === 0) {
+    test.skip(true, "sibling Transpara-AI repo tree is not available in this build");
+  }
+  await expect(repos.locator("summary")).toContainText("Transpara-AI Repos");
+  await repos.locator("summary").click();
+
+  await expect(repos.locator(".repo-nav-section h6").filter({ hasText: "Civilization" })).toBeVisible();
+  await expect(repos.locator(".repo-nav-section h6").filter({ hasText: "Platform" })).toBeVisible();
+  await expect(repos.locator(".repo-nav-section h6").filter({ hasText: "Other" })).toBeVisible();
+  await expect(repos.locator('a[href="repo-hive.html"]')).toBeVisible();
+  await expect(repos.locator('a[href="repo-platform.html"]')).toBeVisible();
+  await expect(repos.locator('a[href="repo-transpara-mcp.html"]')).toBeVisible();
+  const civilization = repos.locator(".repo-nav-section").filter({ hasText: "Civilization" });
+  const platform = repos.locator(".repo-nav-section").filter({ hasText: "Platform" });
+  const other = repos.locator(".repo-nav-section").filter({ hasText: "Other" });
+  await expect(civilization.locator('a[href="repo-docs.html"]')).toBeVisible();
+  await expect(civilization.locator('a[href="repo-agentic-dev-console.html"]')).toHaveCount(0);
+  await expect(platform.locator('a[href="repo-agentic-dev-console.html"]')).toBeVisible();
+  await expect(platform.locator('a[href="repo-upstream-fork-sync.html"]')).toHaveCount(0);
+  await expect(other.locator('a[href="repo-upstream-fork-sync.html"]')).toBeVisible();
+
+  await repos.locator('a[href="repo-transpara-mcp.html"]').click();
+  await expect(page.locator("h1.page-title")).toHaveText("transpara-mcp repository");
+  await expect(page.locator(".repo-side-group")).toHaveAttribute("open", "");
+  await expect(page.locator('.repo-side-group a.current[href="repo-transpara-mcp.html"]')).toBeVisible();
+  await expect(page.locator(".repo-infobox")).toContainText("Platform");
+  await expect(page.locator(".repo-infobox")).toContainText("Fork tracks transpara/transpara-mcp");
+  await expect(page.locator(".repo-infobox")).toContainText("Branches");
+  await expect(page.locator(".repo-readme")).toContainText("Transpara MCP Server");
+
+  await page.goto("/repo-wiki.html");
+  await expect(page.locator(".repo-infobox")).toContainText("Transpara-AI native origin");
+  await expect(page.locator(".repo-infobox")).toContainText(/branches; [0-9]+ total commits/);
+});
+
+test("article source references are clickable and open served source pages", async ({ page }) => {
+  await page.goto("/sakana-ai-evaluation.html");
+
+  const panel = page.locator(".source-panel");
+  await expect(panel).toBeVisible();
+  const updates = page.locator(".source-update-panel");
+  await expect(updates).toBeVisible();
+  await expect(updates).toContainText("Sakana AI Capability Evaluation v1.1.0");
+  await expect(updates).not.toContainText("raw/inbox/");
+  await expect(updates).not.toContainText("supersedes:");
+  await expect(updates.locator('a[href^="source/"]').first()).toBeVisible();
+  const updatesAfterArticle = await page.evaluate(() => {
+    const article = document.querySelector("article.body");
+    const panel = document.querySelector(".source-update-panel");
+    return !!(article && panel && (article.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING));
+  });
+  expect(updatesAfterArticle).toBe(true);
+  await panel.locator("summary").click();
+  const link = panel.locator('a[href^="source/"]').first();
+  await expect(link).toBeVisible();
+  const href = await link.getAttribute("href");
+  expect(href).toMatch(/^source\/[a-f0-9]+\.html$/);
+
+  await link.click();
+  await expect(page.locator(".source-rendered-markdown")).toBeVisible();
+  await expect(page.locator(".source-text")).toHaveCount(0);
+  await expect(page.locator(".source-path code")).toContainText(/Sakana|raw\/civilization/);
+});
+
+test("investigation pages expose grouped raw documents and contribution boxes", async ({ page }) => {
+  await page.goto("/sakana-ai-evaluation.html");
+
+  const infobox = page.locator(".infobox");
+  await expect(infobox).toContainText("Raw docs");
+  await expect
+    .poll(() => infobox.locator('a[href^="source/"]').count(), { timeout: 5000 })
+    .toBeGreaterThanOrEqual(1);
+  await expect(infobox.locator('a[href^="source/"]').filter({ hasText: /Sakana AI Capability Evaluation/ }).first()).toBeVisible();
+  await expect(page.locator(".contribution-box")).toContainText("slated as potential future usage.");
+  await expect(page.locator("article.body").locator("code").filter({ hasText: "raw/inbox/" })).toHaveCount(0);
+  await expect(page.locator("article.body").locator("code").filter({ hasText: "corpus/copied" })).toHaveCount(0);
+  const contributionBeforeContents = await page.evaluate(() => {
+    const contribution = document.querySelector(".contribution-box");
+    const toc = document.querySelector(".toc");
+    return !!(contribution && toc && (contribution.compareDocumentPosition(toc) & Node.DOCUMENT_POSITION_FOLLOWING));
+  });
+  expect(contributionBeforeContents).toBe(true);
+
+  const investigations = page.locator('.side-group[data-tier="investigation"]');
+  await expect(investigations.locator("summary").first()).toContainText("18");
+  await investigations.evaluate((el) => { el.open = true; });
+  const sakana = investigations.locator(".nav-subgroup").filter({ hasText: "Sakana AI" });
+  await expect(sakana.locator("summary")).toContainText(/[1-9][0-9]*/);
+  await sakana.evaluate((el) => { el.open = true; });
+  await expect(sakana.locator('a[href="sakana-ai-evaluation.html"]')).toBeVisible();
+  await expect(sakana.locator('a[href="sakana-ai-adjacent-landscape.html"]')).toBeVisible();
+  const openArrow = await sakana.locator("summary").evaluate((el) => getComputedStyle(el, "::before").content);
+  await sakana.locator("summary").click();
+  await expect(sakana).not.toHaveAttribute("open", "");
+  const closedArrow = await sakana.locator("summary").evaluate((el) => getComputedStyle(el, "::before").content);
+  expect(closedArrow).toContain("›");
+  expect(closedArrow).not.toBe(openArrow);
+
+  const okf = investigations.locator(".nav-subgroup").filter({ hasText: "Google Open Knowledge Format" });
+  await expect(okf.locator("summary")).toContainText("1");
+  await okf.evaluate((el) => { el.open = true; });
+  await expect(okf.locator('a[href="google-open-knowledge-format-capability-evaluation.html"]')).toBeVisible();
+
+  await page.goto("/hermes-agent.html");
+  await expect(page.locator("h1.page-title")).toHaveText("Hermes Agent");
+  await expect(page.locator(".contribution-box")).toContainText("U7 CapabilityArtifact governance and U8 CapabilityEvolution sequencing");
+  await expect
+    .poll(() => page.locator(".infobox").locator('a[href^="source/"]').count(), { timeout: 5000 })
+    .toBeGreaterThanOrEqual(1);
+  await expect(page.locator('.side-group[data-tier="investigation"] .nav-subgroup').filter({ hasText: "Hermes Agent" }).locator("summary")).toContainText(/[1-9][0-9]*/);
+});
+
+test("OKF browser-ingested research appears as a navigable investigation article", async ({ page }) => {
+  await page.goto("/google-open-knowledge-format-capability-evaluation.html");
+
+  await expect(page.locator("h1.page-title")).toHaveText("Google Open Knowledge Format Capability Evaluation");
+  await expect(page.locator(".contribution-box")).toContainText("slated as potential future usage.");
+  await expect(page.locator(".infobox").locator('a[href^="source/"]')).toHaveCount(1);
+  await expect(page.locator(".infobox")).toContainText("Google Open Knowledge Format (OKF) Capability Evaluation v1.0.0");
+  await expect(page.locator("article.body")).toContainText("OKF standardizes the envelope; the Civilization governs the contents.");
+
+  const rawDoc = page.locator(".infobox").locator('a[href^="source/"]').first();
+  await rawDoc.click();
+  await expect(page.locator(".source-rendered-markdown")).toBeVisible();
+  await expect(page.locator("h1.page-title")).toContainText("Google Open Knowledge Format (OKF) Capability Evaluation v1.0.0");
+});
+
+test("markdown source links render formatted markdown, not raw text", async ({ page }) => {
+  await page.goto("/sakana-ai-evaluation.html");
+
+  const rawDoc = page.locator(".infobox").locator('a[href^="source/"]').filter({ hasText: "Sakana AI Capability Evaluation" }).first();
+  await expect(rawDoc).toBeVisible();
+  await rawDoc.click();
+
+  await expect(page.locator("h1.page-title")).toContainText("Sakana AI Capability Evaluation v1.1.0");
+  await expect(page.locator(".source-meta-table")).toContainText("TAI-RES-2026-001");
+  await expect(page.locator(".source-rendered-markdown")).toBeVisible();
+  await expect(page.locator(".source-rendered-markdown h2").filter({ hasText: "Revision History" })).toBeVisible();
+  await expect(page.locator(".source-text")).toHaveCount(0);
+});
+
+test("wiki sidebar is wider by default and supports persistent resizing", async ({ page }) => {
+  await page.goto("/index.html");
+
+  const sidebar = page.locator(".sidebar");
+  const resizer = page.locator(".sidebar-resizer");
+  await expect(sidebar).toBeVisible();
+  await expect(resizer).toBeVisible();
+
+  const defaultWidth = await sidebar.evaluate((el) => Math.round(el.getBoundingClientRect().width));
+  expect(defaultWidth).toBeGreaterThanOrEqual(330);
+
+  await resizer.focus();
+  await page.keyboard.press("End");
+  await expect
+    .poll(() => sidebar.evaluate((el) => Math.round(el.getBoundingClientRect().width)), { timeout: 5000 })
+    .toBeGreaterThan(500);
+
+  await page.goto("/gate-k.html");
+  const restored = await page.locator(".sidebar").evaluate((el) => Math.round(el.getBoundingClientRect().width));
+  expect(restored).toBeGreaterThan(500);
+});
+
+test("arc page renders with tracks structure inside normalized wiki chrome", async ({ page }) => {
+  await page.goto("/civilization-arc.html");
 
   const nav = page.locator(".civilization-arc-nav");
   await expect(nav).toBeVisible();
-  await expect(page.locator("h1.page-title")).toHaveText("Civilization Wiki");
+  await expect(page.locator("h1.page-title")).toHaveText("Civilization Progress Chart");
+  await expect(page.locator(".topbar")).toBeVisible();
+  await expect(page.locator(".sidebar")).toBeVisible();
 
   // SVG is rendered with the three track bands and now-line.
   await expect(page.locator("svg.arc-svg")).toBeVisible();
@@ -19,8 +236,33 @@ test("homepage arc renders with tracks structure", async ({ page }) => {
   expect(count).toBeGreaterThan(0);
 });
 
-test("arc gutter labels stay inside the SVG viewBox", async ({ page }) => {
+test("wiki sidebar uses collapsible groups and preserves scroll across article clicks", async ({ page }) => {
   await page.goto("/index.html");
+
+  const sidebar = page.locator(".sidebar");
+  await expect(sidebar).toBeVisible();
+  await expect(sidebar.locator(".side-tools")).toContainText("Contents");
+
+  const architecture = sidebar.locator('.side-group[data-tier="architecture"]');
+  await expect(architecture.locator("summary")).toBeVisible();
+  await expect(architecture).not.toHaveAttribute("open", "");
+
+  await architecture.locator("summary").click();
+  await expect(architecture).toHaveAttribute("open", "");
+  await expect(architecture.locator('a[href="gate-k.html"]')).toBeVisible();
+
+  await sidebar.evaluate((el) => { el.scrollTop = 240; });
+  await architecture.locator('a[href="gate-k.html"]').click();
+  await expect(page.locator("h1.page-title")).toHaveText("Gate K");
+
+  await expect(sidebar.locator('.side-group[data-tier="architecture"]')).toHaveAttribute("open", "");
+  await expect(sidebar.locator('a.current[href="gate-k.html"]')).toBeVisible();
+  const restored = await sidebar.evaluate((el) => el.scrollTop);
+  expect(restored).toBeGreaterThan(100);
+});
+
+test("arc gutter labels stay inside the SVG viewBox", async ({ page }) => {
+  await page.goto("/civilization-arc.html");
   await expect(page.locator("svg.arc-svg")).toBeVisible();
 
   async function clippedLabels() {
@@ -36,8 +278,8 @@ test("arc gutter labels stay inside the SVG viewBox", async ({ page }) => {
   expect(await clippedLabels()).toEqual([]);
 });
 
-test("homepage arc displays operation progress evidence", async ({ page }) => {
-  await page.goto("/index.html");
+test("arc page displays operation progress evidence", async ({ page }) => {
+  await page.goto("/civilization-arc.html");
 
   const panel = page.locator(".arc-progress-panel");
   await expect(panel).toBeVisible();
@@ -53,7 +295,7 @@ test("homepage arc displays operation progress evidence", async ({ page }) => {
 });
 
 test("marker click populates the detail panel", async ({ page }) => {
-  await page.goto("/index.html");
+  await page.goto("/civilization-arc.html");
 
   const nav = page.locator(".civilization-arc-nav");
   await expect(nav).toBeVisible();
@@ -97,7 +339,7 @@ test("underscore standalone arc route remains available", async ({ page }) => {
 
 test("arc remains inside the mobile viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/index.html");
+  await page.goto("/civilization-arc.html");
 
   const nav = page.locator(".civilization-arc-nav");
   await expect(nav).toBeVisible();
@@ -107,7 +349,7 @@ test("arc remains inside the mobile viewport", async ({ page }) => {
 
 test("narrow viewport: the arc fits the frame at default zoom (no internal or page scroll)", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
-  await page.goto("/index.html");
+  await page.goto("/civilization-arc.html");
 
   const nav = page.locator(".civilization-arc-nav");
   await expect(nav).toBeVisible();
@@ -177,18 +419,25 @@ test('reflows on resize: the fit viewBox tracks the frame width, page never scro
     const vb = await svg.getAttribute('viewBox');
     return vb ? parseFloat(vb.split(' ')[2]) : 0;
   };
+  const frameWidth = async () => page.locator(".arc-frame").evaluate((el) => Math.round(el.clientWidth));
 
-  // Wide viewport → wide fit viewBox (the arc fills the frame).
+  // Wide viewport -> the fit viewBox tracks the actual frame width. The frame is
+  // narrower now because the article shell has a wider, resizable sidebar.
   await page.setViewportSize({ width: 1300, height: 900 });
-  await expect.poll(viewBoxWidth, { timeout: 5000 }).toBeGreaterThan(1000);
+  await expect.poll(frameWidth, { timeout: 5000 }).toBeGreaterThan(800);
+  await expect.poll(viewBoxWidth, { timeout: 5000 }).toBeGreaterThan(800);
   const wide = await viewBoxWidth();
+  const wideFrame = await frameWidth();
+  expect(Math.abs(wide - wideFrame)).toBeLessThanOrEqual(4);
 
   // Narrow viewport → the fit viewBox reflows smaller to track the frame.
   await page.setViewportSize({ width: 520, height: 900 });
   await expect.poll(viewBoxWidth, { timeout: 5000 }).toBeLessThan(wide);
   const narrow = await viewBoxWidth();
+  const narrowFrame = await frameWidth();
 
   expect(narrow).toBeLessThan(wide); // viewBox recomputed for the new container
+  expect(Math.abs(narrow - narrowFrame)).toBeLessThanOrEqual(4);
   const bodyScrollsX = await page.evaluate(() => document.body.scrollWidth > window.innerWidth + 1);
   expect(bodyScrollsX).toBeFalsy();
 });
