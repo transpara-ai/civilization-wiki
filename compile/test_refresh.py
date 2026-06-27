@@ -67,6 +67,7 @@ def test_refresh_exits_nonzero_when_build_site_fails():
             refresh.DF = root / "missing-dark-factory"
             refresh.SNAP = root / "compile" / "source-snapshot.json"
             refresh.STATUS = root / "compile" / "refresh-status.json"
+            refresh.SNAP.write_text(json.dumps({"raw/example.md": "old-hash"}))
             refresh.sh = fake_sh
             try:
                 refresh.main()
@@ -75,7 +76,11 @@ def test_refresh_exits_nonzero_when_build_site_fails():
             else:
                 raise AssertionError("refresh must exit nonzero when build_site.py fails")
             assert refresh.STATUS.exists()
-            assert not refresh.SNAP.exists()
+            status = json.loads(refresh.STATUS.read_text())
+            assert status["changed_articles"] == ["example"]
+            assert status["stale_articles"] == ["example"]
+            assert "failed before the rendered site was updated" in status["note"]
+            assert json.loads(refresh.SNAP.read_text()) == {"raw/example.md": "old-hash"}
         finally:
             refresh.ROOT = old["ROOT"]
             refresh.RAW = old["RAW"]

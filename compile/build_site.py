@@ -12,6 +12,7 @@ import re
 import json
 import html
 import hashlib
+import functools
 import pathlib
 import subprocess
 import urllib.parse
@@ -883,6 +884,7 @@ def source_doc_id(text):
     return ""
 
 
+@functools.lru_cache(maxsize=None)
 def source_link_aliases(ref):
     ref = source_ref_clean(ref)
     href = source_rel_href(ref)
@@ -963,7 +965,13 @@ def link_source_code_alias_refs(body_html, refs):
         return '<a class="source-code-link" href="%s"><code>%s</code></a>' % (
             html.escape(href), html.escape(label))
 
-    return re.sub(r"<code>([^<]+)</code>", repl, body_html)
+    parts = re.split(r"(<a\b[^>]*>.*?</a>|<pre\b[^>]*>.*?</pre>)",
+                     body_html, flags=re.I | re.S)
+    for i, part in enumerate(parts):
+        if not part or part.startswith("<a") or part.startswith("<pre"):
+            continue
+        parts[i] = re.sub(r"<code>([^<]+)</code>", repl, part)
+    return "".join(parts)
 
 
 def _link_aliases_in_text(text, alias_links):

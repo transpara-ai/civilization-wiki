@@ -21,11 +21,13 @@ def with_source(ref, text, fn):
             site.ROOT = root
             site.ALLOWED_SOURCE_ROOTS = [root]
             site.SOURCE_LINKS = {ref: "source/example.html"}
+            site.source_link_aliases.cache_clear()
             fn()
         finally:
             site.ROOT = old_root
             site.ALLOWED_SOURCE_ROOTS = old_allowed
             site.SOURCE_LINKS = old_links
+            site.source_link_aliases.cache_clear()
 
 
 def test_links_declared_adr_identifier_in_text_and_code_spans():
@@ -65,6 +67,21 @@ def test_links_doc_id_and_decision_aliases_from_declared_source():
     print("ok test_links_doc_id_and_decision_aliases_from_declared_source")
 
 
+def test_path_shaped_alias_does_not_rewrap_existing_source_code_link():
+    ref = "raw/example.md"
+
+    def run():
+        body = "<p><code>raw/example.md</code></p>"
+        out = site.link_source_code_refs(body)
+        out = site.link_source_code_alias_refs(out, [ref])
+        assert out.count('<a class="source-code-link"') == 1, out
+        assert "<a class=\"source-code-link\" href=\"source/example.html\"><code>raw/example.md</code></a>" in out
+        assert "<a class=\"source-code-link\" href=\"source/example.html\"><code><a" not in out
+
+    with_source(ref, "---\ntitle: raw/example.md\n---\n# Example\n", run)
+    print("ok test_path_shaped_alias_does_not_rewrap_existing_source_code_link")
+
+
 def test_later_sources_win_for_duplicate_document_aliases():
     old_ref = "raw/inbox/old/TAI-RES-2026-004-v1.0.0-MemPalace.md"
     new_ref = "raw/inbox/new/TAI-RES-2026-004-v1.1.0-MemPalace.md"
@@ -85,6 +102,7 @@ def test_later_sources_win_for_duplicate_document_aliases():
                 old_ref: "source/old.html",
                 new_ref: "source/new.html",
             }
+            site.source_link_aliases.cache_clear()
             out = site.link_source_alias_refs("<p>TAI-RES-2026-004 is current.</p>", [old_ref, new_ref])
             assert 'href="source/new.html"' in out, out
             assert 'href="source/old.html"' not in out, out
@@ -92,6 +110,7 @@ def test_later_sources_win_for_duplicate_document_aliases():
             site.ROOT = old_root
             site.ALLOWED_SOURCE_ROOTS = old_allowed
             site.SOURCE_LINKS = old_links
+            site.source_link_aliases.cache_clear()
     print("ok test_later_sources_win_for_duplicate_document_aliases")
 
 
