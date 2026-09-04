@@ -32,6 +32,7 @@ ASSETS = ROOT / "compile" / "assets"
 RAW = ROOT / "raw"
 STATUS = ROOT / "compile" / "refresh-status.json"
 INDEX = ROOT / "index.md"
+ARCHIVE_BOUNDARY_PATH = RAW / "transpara" / "dark-factory" / ".civilization-archive.json"
 SOURCE_DIST = DIST / "source"
 CSS_VER = ""
 SEARCH_VER = ""
@@ -349,6 +350,41 @@ def fm_list_with_comments(fm, key):
     return out
 
 
+def load_archive_boundary(path=ARCHIVE_BOUNDARY_PATH):
+    """Load the source-owned archive contract that controls discovery only."""
+    if not path.exists():
+        return {"archived_on": "", "source_prefixes": ()}
+    try:
+        boundary = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SystemExit("archive boundary: cannot load %s: %s" % (path, exc))
+    discovery = boundary.get("discovery")
+    prefixes = boundary.get("source_prefixes")
+    archived_on = str(boundary.get("archived_on", "")).strip()
+    if (boundary.get("schema") != "transpara-civilization-archive-boundary/v1"
+            or not archived_on or not isinstance(prefixes, list) or not prefixes
+            or any(not isinstance(prefix, str) or not prefix.strip()
+                   for prefix in prefixes)
+            or not isinstance(discovery, dict)
+            or discovery.get("navigation") != "exclude"
+            or discovery.get("search") != "exclude"
+            or discovery.get("direct_links") != "preserve"):
+        raise SystemExit("archive boundary: incomplete contract in %s" % path)
+    return {
+        "archived_on": archived_on,
+        "source_prefixes": tuple(prefix.strip() for prefix in prefixes),
+    }
+
+
+ARCHIVE_BOUNDARY = load_archive_boundary()
+
+
+def source_is_archived(ref):
+    clean = str(ref or "").strip().strip('"').strip("'")
+    return any(clean.startswith(prefix)
+               for prefix in ARCHIVE_BOUNDARY["source_prefixes"])
+
+
 def article_meta():
     meta = {}
     for p in sorted(WIKI.glob("*.md")):
@@ -364,6 +400,13 @@ def article_meta():
                 p.stem, org_present, fm_scalar(fm, "org"), fm_scalar(fm, "tier"))
         except ValueError as exc:
             raise SystemExit("article_meta: %s" % exc)
+        source_refs = fm_list(fm, "sources") + fm_list(fm, "raw_documents")
+        local_source_refs = [ref for ref in source_refs
+                             if not ref.startswith(("http://", "https://"))]
+        inherited_archive_date = ""
+        if local_source_refs and all(source_is_archived(ref)
+                                     for ref in local_source_refs):
+            inherited_archive_date = ARCHIVE_BOUNDARY["archived_on"]
         meta[p.stem] = {
             "slug": p.stem,
             # fm_scalar for the value-load-bearing title/tier (a commented
@@ -373,7 +416,8 @@ def article_meta():
             "title": fm_scalar(fm, "entity") or p.stem.replace("-", " "),
             "tier": tier,
             "org": org,
-            "retired_on": fm_val(fm, "retired_on"),
+            "retired_on": fm_val(fm, "retired_on") or inherited_archive_date,
+            "archive_inherited": bool(inherited_archive_date),
         }
     return meta
 
@@ -866,16 +910,19 @@ def article_toc(meta, toc_tokens, is_home=False):
     return build_toc(toc_tokens)
 
 
-def state_banner_html(fm):
+def state_banner_html(fm, meta=None):
     # Retired takes precedence over stale. R7: the stale-since wording is
     # reason-neutral ("raw sources changed; summary re-derivation pending"), so it
     # is correct for an unauthenticated ADD as well as a Replace — the old text
     # ("raw sources were replaced ... pending authorization") was false for an ADD.
-    retired_on = fm_val(fm, "retired_on")
+    retired_on = fm_val(fm, "retired_on") or (meta or {}).get("retired_on", "")
     if retired_on:
+        reason = fm_val(fm, "retired_reason")
+        if not reason and (meta or {}).get("archive_inherited"):
+            reason = "all cited sources are historical evidence under the Civilization archive boundary"
         return ('<div class="article-state-banner">Retired on %s — %s</div>'
                 % (html.escape(retired_on),
-                   html.escape(fm_val(fm, "retired_reason") or "no reason recorded")))
+                   html.escape(reason or "no reason recorded")))
     stale_since = fm_val(fm, "stale_since")
     if stale_since:
         return ('<div class="article-state-banner">Synthesis stale since %s'
@@ -1482,17 +1529,25 @@ def source_metadata_table(fm):
 
 def render_source_document(ref, path, text):
     source_path = '<p class="source-path"><code>%s</code></p>' % html.escape(ref)
+    archived = ""
+    if source_is_archived(ref):
+        archived = (
+            '<div class="article-state-banner" data-archive-boundary="historical-evidence">'
+            'Archived historical evidence since %s — preserved for direct citation; '
+            'excluded from current navigation, search, policy, and workflow use.</div>'
+            % html.escape(ARCHIVE_BOUNDARY["archived_on"])
+        )
     if path and path.suffix.lower() == ".md":
         fm, body = split_fm(text)
         rendered = safe_markdown_html(body)
         return (
             "%s%s"
             '<article class="body source-body source-rendered-markdown">%s</article>'
-        ) % (source_path, source_metadata_table(fm), rendered)
+        ) % (archived + source_path, source_metadata_table(fm), rendered)
     return (
         "%s"
         '<article class="body source-body"><pre class="source-text"><code>%s</code></pre></article>'
-    ) % (source_path, html.escape(text))
+    ) % (archived + source_path, html.escape(text))
 
 
 def build_source_pages(status):
@@ -1527,14 +1582,22 @@ def build_source_pages(status):
             (html.escape(title), body),
             status,
         ))
-        SOURCE_INDEX.append({
-            "slug": "source/%s" % sid,
-            "href": href,
-            "title": title,
-            "tier": "source",
-            "ref": ref,
-            "text": ("%s %s %s" % (ref, title, text))[:12000],
-        })
+        ref_slug = pathlib.PurePosixPath(ref).stem
+        inherited_article_archive = (
+            ref_slug in META
+            and META[ref_slug].get("retired_on")
+            and ("/wiki/" in ref.replace("\\", "/")
+                 or ref.replace("\\", "/").startswith("wiki/"))
+        )
+        if not source_is_archived(ref) and not inherited_article_archive:
+            SOURCE_INDEX.append({
+                "slug": "source/%s" % sid,
+                "href": href,
+                "title": title,
+                "tier": "source",
+                "ref": ref,
+                "text": ("%s %s %s" % (ref, title, text))[:12000],
+            })
 
 
 def _supersedes_target(comment):
@@ -2545,7 +2608,7 @@ def page(slug, title, meta, fm, body_html, toc_tokens, links, status, *, is_home
         "an article in the %s" % SITE_NAME)
     h1 = SITE_NAME if is_home else html.escape(title)
     page_title = SITE_NAME if is_home or title == SITE_NAME else ("%s — %s" % (title, SITE_NAME))
-    state_banner = "" if is_home else state_banner_html(fm)
+    state_banner = "" if is_home else state_banner_html(fm, meta)
     if is_home:
         article_html = '<article class="body">%s</article>' % body_html
     else:

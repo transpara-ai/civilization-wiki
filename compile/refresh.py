@@ -20,13 +20,17 @@ import subprocess
 import pathlib
 import datetime
 import re
+import os
 
 import stats
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 RAW = ROOT / "raw"
 WIKI = ROOT / "wiki"
-DF = pathlib.Path("/Transpara/transpara-ai/repos/docs/dark-factory")
+DF = pathlib.Path(
+    os.environ.get("CIVWIKI_DARK_FACTORY_SOURCE", "")
+    or "/Transpara/transpara-ai/repos/docs/dark-factory"
+)
 SNAP = ROOT / "compile" / "source-snapshot.json"
 STATUS = ROOT / "compile" / "refresh-status.json"
 
@@ -41,7 +45,8 @@ def mirror_sources():
     if DF.exists():
         try:
             out = sh("rsync", "-a", "--delete", "--prune-empty-dirs",
-                     "--include=*/", "--include=*.md", "--exclude=*",
+                     "--include=*/", "--include=*.md",
+                     "--include=.civilization-archive.json", "--exclude=*",
                      str(DF) + "/", str(dst) + "/")
         except FileNotFoundError as e:
             print("refresh: source mirror skipped: %s" % e, file=sys.stderr)
@@ -53,7 +58,11 @@ def mirror_sources():
 
 def hash_sources():
     h = {}
-    for p in RAW.rglob("*.md"):
+    candidates = list(RAW.rglob("*.md"))
+    boundary = RAW / "transpara" / "dark-factory" / ".civilization-archive.json"
+    if boundary.exists():
+        candidates.append(boundary)
+    for p in candidates:
         try:
             h[str(p.relative_to(ROOT))] = hashlib.sha256(p.read_bytes()).hexdigest()
         except Exception:
