@@ -1,0 +1,16 @@
+{
+  "schema": "transpara-civilization-archive-boundary/v1",
+  "archived_on": "2026-09-04",
+  "scope": "dark-factory",
+  "reason": "The embedded Dark Factory/TLC lifecycle is retired in favor of the modular canonical transpara-tlc workflow standard.",
+  "authority": "historical-evidence-only",
+  "discovery": {
+    "navigation": "exclude",
+    "search": "exclude",
+    "direct_links": "preserve"
+  },
+  "source_prefixes": [
+    "raw/transpara/dark-factory/",
+    "/Transpara/transpara-ai/repos/docs/dark-factory/"
+  ]
+}

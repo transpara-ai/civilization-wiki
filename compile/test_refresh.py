@@ -185,6 +185,30 @@ def test_mirror_sources_warns_but_continues_on_rsync_failure():
     print("ok test_mirror_sources_warns_but_continues_on_rsync_failure")
 
 
+def test_mirror_sources_carries_the_single_archive_boundary():
+    with tempfile.TemporaryDirectory() as d:
+        root = pathlib.Path(d)
+        df = root / "docs" / "dark-factory"
+        df.mkdir(parents=True)
+        old_raw, old_df, old_sh = refresh.RAW, refresh.DF, refresh.sh
+        seen = []
+
+        def capture(*args):
+            seen.extend(args)
+            return Proc()
+
+        try:
+            refresh.RAW = root / "raw"
+            refresh.DF = df
+            refresh.sh = capture
+            refresh.mirror_sources()
+            assert "--include=.civilization-archive.json" in seen
+            assert "--delete" in seen
+        finally:
+            refresh.RAW, refresh.DF, refresh.sh = old_raw, old_df, old_sh
+    print("ok test_mirror_sources_carries_the_single_archive_boundary")
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items())
            if k.startswith("test_") and callable(v)]

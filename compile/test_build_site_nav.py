@@ -2,9 +2,74 @@
 """Stdlib-assert tests for generated sidebar navigation invariants."""
 import pathlib
 import sys
+import json
+import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import build_site as site  # noqa: E402
+
+
+def test_source_archive_boundary_is_strict_and_discovery_only():
+    with tempfile.TemporaryDirectory() as d:
+        marker = pathlib.Path(d) / ".civilization-archive.json"
+        marker.write_text(json.dumps({
+            "schema": "transpara-civilization-archive-boundary/v1",
+            "archived_on": "2026-09-04",
+            "discovery": {
+                "navigation": "exclude",
+                "search": "exclude",
+                "direct_links": "preserve",
+            },
+            "source_prefixes": ["raw/transpara/dark-factory/"],
+        }))
+        boundary = site.load_archive_boundary(marker)
+        old = site.ARCHIVE_BOUNDARY
+        old_wiki = site.WIKI
+        try:
+            site.ARCHIVE_BOUNDARY = boundary
+            assert site.source_is_archived("raw/transpara/dark-factory/v4.0/README.md")
+            assert not site.source_is_archived("raw/transpara/operation/README.md")
+            rendered = site.render_source_document(
+                "raw/transpara/dark-factory/v4.0/README.md",
+                pathlib.Path("README.md"),
+                "# Historical record\n",
+            )
+            assert 'data-archive-boundary="historical-evidence"' in rendered
+            assert "preserved for direct citation" in rendered
+
+            wiki = pathlib.Path(d) / "wiki"
+            wiki.mkdir()
+            (wiki / "old-doctrine.md").write_text(
+                "---\nentity: Old Doctrine\ntier: arc\nsources:\n"
+                "  - raw/transpara/dark-factory/v4.0/README.md\n---\n"
+            )
+            (wiki / "mixed.md").write_text(
+                "---\nentity: Mixed Evidence\ntier: arc\nsources:\n"
+                "  - raw/transpara/dark-factory/v4.0/README.md\n"
+                "  - raw/civilization/current.md\n---\n"
+            )
+            site.WIKI = wiki
+            meta = site.article_meta()
+            assert meta["old-doctrine"]["retired_on"] == "2026-09-04"
+            assert meta["old-doctrine"]["archive_inherited"]
+            assert not meta["mixed"]["retired_on"]
+        finally:
+            site.ARCHIVE_BOUNDARY = old
+            site.WIKI = old_wiki
+    print("ok test_source_archive_boundary_is_strict_and_discovery_only")
+
+
+def test_invalid_source_archive_boundary_fails_closed():
+    with tempfile.TemporaryDirectory() as d:
+        marker = pathlib.Path(d) / ".civilization-archive.json"
+        marker.write_text('{"schema":"wrong"}')
+        try:
+            site.load_archive_boundary(marker)
+        except SystemExit as exc:
+            assert "incomplete contract" in str(exc)
+        else:
+            raise AssertionError("invalid archive boundary must fail closed")
+    print("ok test_invalid_source_archive_boundary_fails_closed")
 
 
 def investigation_articles_by_topic():
